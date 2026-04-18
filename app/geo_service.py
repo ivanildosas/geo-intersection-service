@@ -1,8 +1,10 @@
+from os import path
 from shapely import wkt as shapely_wkt
 from pyproj import Geod
 from osgeo import osr, ogr, gdal
 
 import app.constants as ct
+import app.util as util
 from app.field_enum import FieldNames
 
 
@@ -12,9 +14,20 @@ class GeoService:
         gdal.UseExceptions()
         pass
 
-    # Cria uma lista de dicionários com os atributos e seus valores
+    # Retorna o valor do atributo do layer
     @staticmethod
-    def get_layer_properties(layer):
+    def get_layer_property(layer, field_name):
+        if not layer:
+            return None
+        layer.ResetReading()
+        for feature in layer:
+            if feature.GetFieldIndex(field_name) != -1:
+                val = feature.GetField(field_name)
+                if val is not None: # Só aceita se houver dado
+                    return val
+
+    # Retorna uma lista de dicionários com os atributos e seus valores do layer
+    def get_layer_properties(self, layer):
         if not layer:
             return []
 
@@ -28,10 +41,82 @@ class GeoService:
             for i in range(field_count):
                 field_name = layer_defn.GetFieldDefn(i).GetName()
                 value = feature.GetField(i)
-                prop_dict[field_name] = value
+                prop_dict[util.fix_charset(field_name)] = value
 
             property_list.append(prop_dict)
         return property_list
+
+    # Efetua a cálculo geodésico de área em metros quadrados
+    @staticmethod
+    def get_geodesic_area_m2(ogr_geom, ellipsoid=ct.ELIPSOID):
+        if ogr_geom is None:
+            return 0.0
+
+        wkt_text = ogr_geom.ExportToWkt()
+        shapely_geom = shapely_wkt.loads(wkt_text)
+
+        geod = Geod(ellps=ellipsoid)
+        area_m2, _ = geod.geometry_area_perimeter(shapely_geom)
+        return abs(area_m2)
+
+    # Verifica se o shapefile tem geometria e atributos
+    def check_shapefile(self, file_path):
+        try:
+            driver = ogr.GetDriverByName("ESRI Shapefile")
+            dataset = driver.Open(file_path, 0)
+
+            if dataset is None:
+                print(f"Não foi possível abrir {file_path}. Arquivo ausente ou corrompido.")
+                return False
+
+            layer = dataset.GetLayer()
+            field_count = layer.GetLayerDefn().GetFieldCount()
+
+            if field_count == 0:
+                print(f'Não foi possível ler os atributos do shapefile: {path.basename(file_path)}')
+                print('Arquivo ausente ou corrompido.')
+                return False
+            return True
+        except Exception as e:
+            print(f"ERRO ao validar {file_path}: {e}")
+            return False
+
+    # Atribui valor aos atributos do dataset e insere os campos 'banda(N)'
+    def update_dataset_fields(self, out_dataset, field_dict):
+        layer = out_dataset.GetLayer()
+        layer_defn = layer.GetLayerDefn()
+        field_count = layer_defn.GetFieldCount()
+
+        layer.ResetReading()
+        for feature in layer:
+            geom = feature.GetGeometryRef()
+
+            # efetua o cálculo de área usando a elipsoid padrão 'WGS84'
+            area_m2 = self.get_geodesic_area_m2(geom)
+            area_m2 = round(area_m2, 3)
+
+            area_ha = area_m2 / 10000
+            area_ha = round(area_ha, 3)
+
+            for i in range(field_count):
+                field_name = layer_defn.GetFieldDefn(i).GetName()
+                match field_name:
+                    case FieldNames.ID_GBA:
+                        feature.SetField(i, 1)
+                    case FieldNames.AREA_M2:
+                        feature.SetField(i, area_m2)
+                    case FieldNames.AREA_HA:
+                        feature.SetField(i, area_ha)
+
+            # Cria os atributos banda(1..n)
+            for i, (key, value) in enumerate(field_dict.items(), start=1):
+                field_name = f"{FieldNames.PREFIX_BANDA}{i}"
+                field_index = feature.GetFieldIndex(field_name)
+                if field_index != -1:
+                    val = util.to_float(value) 
+                    feature.SetField(field_index, val)
+
+            layer.SetFeature(feature)
 
     @staticmethod
     def create_spatial_ref(epsg):
@@ -94,6 +179,7 @@ class GeoService:
     def intersect_shapes(self, shape_list):
         esri_driver = ogr.GetDriverByName("ESRI Shapefile")
         out_dset = dataset_a = None
+        field_dict = {}
 
         for i in range(1, len(shape_list)):
             if dataset_a is None:
@@ -101,6 +187,37 @@ class GeoService:
 
             dataset_b = esri_driver.Open(shape_list[i], 0)
             out_dset = self.intersect_geometries(dataset_a, dataset_b)
-            dataset_a = out_dset
 
+            # Insere no dicionário o nome e valor do atributo 'value'
+            for d_set in [dataset_a, dataset_b]:
+                layer = d_set.GetLayer()
+                name = layer.GetName()
+                if name not in field_dict and d_set.GetDriver().GetName() == 'ESRI Shapefile':
+                    value = self.get_layer_property(layer, FieldNames.VALUE)
+                    field_dict[name] = value
+            # print(f'Dict: {field_dict}', flush=True)
+            dataset_a = out_dset
+        self.update_dataset_fields(out_dset, field_dict)
         return out_dset
+
+    @staticmethod
+    def save_to_shapefile(datasource, file_output_path):
+        try:
+            driver = ogr.GetDriverByName("ESRI Shapefile")
+            if path.exists(file_output_path):
+                driver.DeleteDataSource(file_output_path)
+
+            out_dset = driver.CopyDataSource(datasource, file_output_path)
+
+            if out_dset is not None:
+                out_dset.FlushCache()
+                out_dset = None
+                return True
+
+            return False
+        except Exception as e:
+            print(f"Erro: {e}")
+        finally:
+            if out_dset is not None:
+                out_dset.FlushCache()
+                out_dset = None

@@ -7,6 +7,12 @@ APP_PATH = '/app'
 # Sistema de Referência Geodésico SIRGAS 2000
 DATUM = 4674
 
+# Elipsoide
+WGS84 = 'WGS84'  # Padrão WebGIS (Leaflet)
+GRS80 = 'GRS80'  # Base do SIRGAS 2000
+SPHERE = 'sphere'  # OpenStreetMap, ArcGIS Online, Google Maps
+ELIPSOID = WGS84
+
 # Diretórios de arquivos
 SHAPES_FOLDER = 'files/shapefiles'
 GEOJSON_FOLDER = 'files/geojson'
@@ -20,3 +26,6 @@ SHAPEFILE_COUNT = len(SHAPEFILE_NAME_LIST)
 # Arquivo GeoJSON
 SAMPLE_GEOJSON = 'sample.json'
 SAMPLE_GEOJSON_PATH = path.join(GEOJSON_FOLDER, SAMPLE_GEOJSON)
+
+# OUTPUT
+OUT_INTERSECT_SHP = path.join(SHAPES_FOLDER, 'output_intersect.shp')

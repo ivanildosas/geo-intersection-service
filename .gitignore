@@ -5,9 +5,9 @@ venv/
 .env
 
 # Geoprocessamento (Arquivos temporários/Saídas)
-# files/shapefiles/output_*
-# files/geojson/output_*
-# files/csv/*.csv
+files/shapefiles/output_*
+files/geojson/output_*
+files/csv/*.csv
 
 # Docker
 .dockerignore
