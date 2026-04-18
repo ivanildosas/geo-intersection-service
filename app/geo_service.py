@@ -248,3 +248,21 @@ class GeoService:
             if out_dset is not None:
                 out_dset.FlushCache()
                 out_dset = None
+
+    @staticmethod
+    def save_to_geojson(datasource, file_output_path):
+        try:
+            driver = ogr.GetDriverByName("GeoJSON")
+            if path.exists(file_output_path):
+                driver.DeleteDataSource(file_output_path)
+
+            out_dset = driver.CopyDataSource(datasource, file_output_path)
+            if out_dset is None:
+                return False
+
+            return True
+        except Exception as e:
+            print(f'Erro ao criar arquivo GeoJSON: {file_output_path} - {e}')
+            return False
+        finally:
+            out_dset = None

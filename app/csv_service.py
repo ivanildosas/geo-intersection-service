@@ -21,5 +21,5 @@ class CsvService:
             print(f"Erro: O arquivo {output_path} está aberto. Feche-o e tente novamente.")
             return False
         except Exception as e:
-            print(f"Erro ao salvar aqrquivo CSV: {e}")
+            print(f"Erro ao salvar arquivo CSV: {e}")
             return False

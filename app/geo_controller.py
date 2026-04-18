@@ -1,6 +1,7 @@
 import os
 from app.geo_service import GeoService
 from app.csv_service import CsvService
+from app.json_service import JsonService
 import app.constants as ct
 from pprint import pprint
 
@@ -11,9 +12,9 @@ class GeoController:
 
     def intersect_pipeline(self):
 
-        print('\nProcessamento iniciado', flush=True)
+        print('\nProcessamento de shapefiles iniciado', flush=True)
 
-        # Valida os arquivos shapefiles
+        # 1. Valida os arquivos shapefiles
         for shape_path in ct.SHAPEFILE_PATH_LIST:
             if not self.geo_service.check_shapefile(shape_path):
                 raise ValueError(f'Processamento interrompido: {shape_path} inválido.')
@@ -40,11 +41,16 @@ class GeoController:
         props = self.geo_service.get_layer_properties(result_dataset.GetLayer())
         file_created = CsvService.save_attributes_to_csv(props, ct.OUT_MEDIA_CSV)
         if not file_created:
-            raise ValueError(f'Processamento interrompido: erro ao criar arquivo CSV: {ct.OUT_MEDIA_SHP}')
+            raise ValueError(f'Processamento interrompido: erro ao criar arquivo CSV: {ct.OUT_MEDIA_CSV}')
         print(f'(5/6) Arquivo CSV criado com sucesso: {ct.OUT_MEDIA_CSV}')
 
-        geom_layer = result_dataset.GetLayer()
-        properties = self.geo_service.get_layer_properties(geom_layer)
-        # print(properties)
+        # 6. Cria GeoJSON
+        file_created = self.geo_service.save_to_geojson(result_dataset, ct.OUT_MEDIA_JSON)
+        if not file_created:
+            raise ValueError(f'Processamento interrompido: erro ao criar arquivo GeoJSON: {ct.OUT_MEDIA_JSON}')
+        print(f'(6/6) Arquivo GeoJSON criado com sucesso: {ct.OUT_MEDIA_JSON}')
 
-        return properties
+        json_data = JsonService.get_json_data(ct.OUT_MEDIA_JSON)
+
+        print("Processamento concluído com sucesso!\n")
+        return json_data

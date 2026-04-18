@@ -30,21 +30,7 @@ def get_geojson():
         if not result:
             raise HTTPException(status_code=500, detail="Erro ao processar geometrias.")
 
-        # return JSONResponse(content=result)
-
-        file_path = Path(ct.SAMPLE_GEOJSON_PATH)
-
-        if not file_path.exists():
-            raise HTTPException(
-                status_code=404,
-                detail=f"Arquivo não encontrado: {ct.SAMPLE_GEOJSON_PATH}"
-            )
-
-        return FileResponse(
-            path=file_path,
-            media_type='application/json',
-            filename=ct.SAMPLE_GEOJSON_PATH
-        )
+        return JSONResponse(content=result)
 
     except Exception as e:
         print(f'Erro no Endpoint: {e}')

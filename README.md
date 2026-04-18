@@ -23,6 +23,6 @@ docker-compose up
 | Rota | Método | Descrição |
 | :--- | :--- | :--- |
 | `/` | `GET` | **Server Status:** Verifica se o servidor está online e operacional. |
-| `/api/geojson` | `GET` | **Download:** Retorna o arquivo de teste SAMPLE_GeoJSON. |
+| `/api/geojson` | `GET` | **Download:** Retorna o GeoJSON dos dados resultantes da intersecção dos arquivos shapefiles. |
 
 > **OBS:** Ao rodar em ambiente local, acesse `http://localhost:8000/docs` para visualizar a documentação interativa (Swagger UI) e testar os endpoints diretamente pelo navegador.
