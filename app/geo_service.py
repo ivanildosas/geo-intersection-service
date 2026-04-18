@@ -60,7 +60,8 @@ class GeoService:
         return abs(area_m2)
 
     # Verifica se o shapefile tem geometria e atributos
-    def check_shapefile(self, file_path):
+    @staticmethod
+    def check_shapefile(file_path):
         try:
             driver = ogr.GetDriverByName("ESRI Shapefile")
             dataset = driver.Open(file_path, 0)
@@ -80,6 +81,31 @@ class GeoService:
         except Exception as e:
             print(f"ERRO ao validar {file_path}: {e}")
             return False
+
+    # Inclui o atributo 'media' no dataset e preenche seu valor
+    @staticmethod
+    def create_field_media(dataset, layer_name='Intersect'):
+        layer = dataset.GetLayer()
+        field_media = ogr.FieldDefn(FieldNames.MEDIA, ogr.OFTReal)
+        field_media.SetPrecision(2)
+        layer.CreateField(field_media)
+
+        layer_defn = layer.GetLayerDefn()
+        layer.ResetReading()
+        for feature in layer:
+            media = 0.0
+            field_count = layer_defn.GetFieldCount()
+            for i in range(field_count):
+                field_name = layer_defn.GetFieldDefn(i).GetName()
+                if field_name.startswith(FieldNames.PREFIX_BANDA):
+                    value = feature.GetField(field_name)
+                    media += value
+
+            media_value = round((media/ct.SHAPEFILE_COUNT), 2)
+            media_index = feature.GetFieldIndex(FieldNames.MEDIA)
+            feature.SetField(media_index, media_value)
+            layer.SetFeature(feature)
+        return dataset
 
     # Atribui valor aos atributos do dataset e insere os campos 'banda(N)'
     def update_dataset_fields(self, out_dataset, field_dict):
