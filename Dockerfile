@@ -17,5 +17,6 @@ RUN pip3 install --no-cache-dir -r requirements.txt --break-system-packages
 
 COPY . .
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# gcloud
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
 

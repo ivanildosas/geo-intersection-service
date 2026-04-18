@@ -16,8 +16,7 @@ Serviço de processamento espacial com GDAL/OGR para interseção de dados vetor
 
 ## Como rodar
 ```bash
-docker build -t geo_intersection_service .
-docker run -p 8000:8000 geo_intersection_service
+docker-compose up
 ```
 
 ##  Endpoints
