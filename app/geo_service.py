@@ -243,6 +243,7 @@ class GeoService:
             return False
         except Exception as e:
             print(f"Erro: {e}")
+            return False
         finally:
             if out_dset is not None:
                 out_dset.FlushCache()

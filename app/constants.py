@@ -30,3 +30,4 @@ SAMPLE_GEOJSON_PATH = path.join(GEOJSON_FOLDER, SAMPLE_GEOJSON)
 # OUTPUT
 OUT_INTERSECT_SHP = path.join(SHAPES_FOLDER, 'output_intersect.shp')
 OUT_MEDIA_SHP = path.join(SHAPES_FOLDER, 'output_media_bandas.shp')
+OUT_MEDIA_CSV = path.join(CSV_FOLDER, 'attributes_media_bandas.csv')
