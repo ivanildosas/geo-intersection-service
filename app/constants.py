@@ -2,7 +2,8 @@ from os import path
 from pathlib import Path
 
 # Diretório da aplicação
-APP_PATH = '/app'
+APP_PATH = path.dirname(path.abspath(__file__))
+BASE_DIR = Path(APP_PATH).parent
 
 # Sistema de Referência Geodésico SIRGAS 2000
 DATUM = 4674
@@ -14,9 +15,9 @@ SPHERE = 'sphere'  # OpenStreetMap, ArcGIS Online, Google Maps
 ELIPSOID = WGS84
 
 # Diretórios de arquivos
-SHAPES_FOLDER = 'files/shapefiles'
-GEOJSON_FOLDER = 'files/geojson'
-CSV_FOLDER = 'files/csv'
+SHAPES_FOLDER = str(BASE_DIR / 'files' / 'shapefiles')
+GEOJSON_FOLDER = str(BASE_DIR / 'files' / 'geojson')
+CSV_FOLDER = str(BASE_DIR / 'files' / 'csv')
 
 # Shapefiles
 SHAPEFILE_NAME_LIST = ['camada-1.shp', 'camada-2.shp', 'camada-3.shp']

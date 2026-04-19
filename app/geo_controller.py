@@ -3,7 +3,6 @@ from app.geo_service import GeoService
 from app.csv_service import CsvService
 from app.json_service import JsonService
 import app.constants as ct
-from pprint import pprint
 
 
 class GeoController:

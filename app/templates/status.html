@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Geo Intersection Service</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌍 Geo Intersection Service</h1>
+            <div class="status-badge">
+                <span style="color: #28a745;">●</span> Online
+            </div>
+        </header>
+
+        <div class="info-grid">
+            <div class="info-card">
+                <label>Sistema Operacional</label>
+                <code>{{ os_info }}</code>
+            </div>
+            <div class="info-card">
+                <label>Python</label>
+                <code>{{ python_version }}</code>
+            </div>
+            <div class="info-card">
+                <label>GDAL Engine</label>
+                <code>{{ gdal_version }}</code>
+            </div>
+            <div class="info-card">
+                <label>Runtime</label>
+                <code>FastAPI</code>
+            </div>
+        </div>
+
+        <footer>
+            <a href="https://github.com/ivanildosas/geo-intersection-service" target="_blank" class="repo-link">
+                GitHub Repository
+            </a>
+            <a href="/docs" class="btn-docs">Documentação Swagger →</a>
+        </footer>
+    </div>
+</body>
+</html>
