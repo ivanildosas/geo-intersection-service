@@ -74,6 +74,15 @@ class GeoController:
 
         return json_data
 
+    @staticmethod
+    def get_json_data(file_path):
+        geojson_data = JsonService.get_json_data(file_path)
+        if not geojson_data:
+            Logger.error('Erro na leitura do GeoJSON', file_path)
+            return None
+        Logger.success('GeoJSON lido', file_path)
+        return geojson_data
+
     # Retorna dicionario com as camadas de entrada(shapefiles) em formato GeoJSON Data
     def shapes_to_geojson_dict(self):
         Logger.start('Rotina de conversão de shapefiles para GeoJsonData iniciada.')
@@ -93,3 +102,4 @@ class GeoController:
 
         Logger.success('Rotina finalizada.')
         return geojson_dict
+    

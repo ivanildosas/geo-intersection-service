@@ -1,6 +1,7 @@
 // 1. Variáveis Globais
 let mapInput, mapOutput;
 let layerInputGroup, layerOutputGroup;
+let layerOutput = null;
 
 
 function init() {
@@ -56,5 +57,39 @@ async function carregarCamadasBase() {
     }
 }
 
+document.body.addEventListener('atualizarMapa', async () => {
+    console.log("Evento 'atualizarMapa' Iniciando carga do Mapa 2...");
+    const badge = document.getElementById('status-badge');
+
+    try {
+        if (badge) badge.innerText = "Carregando geometrias...";
+
+        const response = await fetch('/api/read_output_geojson'); 
+        if (!response.ok) throw new Error("Erro ao buscar dados do mapa");
+        
+        const data = await response.json();
+
+        if (layerOutput) {
+            layerOutputGroup.clearLayers();
+        }
+
+        layerOutput = L.geoJSON(data, {
+            style: {
+                color: '#e74c3c', 
+                weight: 3,
+                fillOpacity: 0.4
+            }
+        }).addTo(layerOutputGroup);
+
+        // Ajusta o zoom para enquadrar o resultado
+        mapOutput.fitBounds(layerOutput.getBounds());
+
+        if (badge) badge.innerText = "Mapa atualizado";
+
+    } catch (err) {
+        console.error("Erro ao renderizar mapa 2:", err);
+        if (badge) badge.innerText = "Erro na renderização";
+    }
+});
 
 document.addEventListener('DOMContentLoaded', init);

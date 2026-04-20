@@ -1,11 +1,22 @@
 services:
   web:
     build: .
+    develop:
+      watch:
+        - action: sync
+          path: ./app
+          target: /app/app
+          ignore:
+            - __pycache__/
+        - action: rebuild
+          path: requirements.txt
     ports:
       - "8000:8000"
     environment:
       - PORT=8000
       - PYTHONUNBUFFERED=1
+      - WATCHFILES_FORCE_POLLING=true
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000
     volumes:
+      - .:/app 
       - ./files:/app/files

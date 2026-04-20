@@ -15,16 +15,22 @@
 
     <header class="main-header">
         <h1>Geo Intersection Service</h1>
+        
+        <!--  -->
         <div class="toolbar">
-            <a href="/" class="btn-home">Home</a>
-
-            <button id="btn-execute" 
-                    class="btn-primary"
-                    hx-get="/api/geojson" 
-                    hx-target="#output-section"
-                    hx-indicator="#status-badge">
-                Executar Interseção
+            <button class="btn-home" 
+                hx-get="/api/map_intersect" 
+                hx-swap="none">
+                Intersect Shapes
             </button>
+            <!-- <button id="btn-processar" 
+                class="btn-primary"
+                hx-get="/api/output_geojson" 
+                hx-target="#container-tabela-resultado" 
+                hx-indicator="#status-badge">
+                    Intersect Shapes
+            </button> -->
+            <a href="/" class="btn-home">Home</a>
             <span id="status-badge" class="htmx-indicator badge">⏳ Processando...</span>
         </div>
     </header>
@@ -44,6 +50,9 @@
             </div>
             <div id="map-output" class="map-container"></div>
         </section>
+
+        <div id="table-results-container">
+        </div>
     </main>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>

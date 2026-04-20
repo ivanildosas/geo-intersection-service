@@ -116,7 +116,7 @@ body {
 
 /* Botões */
 .btn-primary {
-    display: none;
+    /* display: none; */
     background: var(--blue-main);
     color: white;
     border: none;
