@@ -50,14 +50,29 @@ def configure_routes(app: FastAPI):
     def read_root(request: Request):
         return create_status_template(request)
 
-    @app.get('/api/geojson')
+    @app.get('/api/ouput_geojson')
     def get_geojson():
         try:
             geojson_data = app.state.controller.intersect_pipeline()
             if not geojson_data:
                 raise HTTPException(status_code=500, detail="Erro ao processar geometrias.")
-
             return JSONResponse(content=geojson_data)
+
+        except Exception as e:
+            print(f'Erro no Endpoint: {e}')
+            raise HTTPException(status_code=500, detail=str(e))
+
+    @app.get('/map', response_class=HTMLResponse)
+    def view_map(request: Request):
+        return templates.TemplateResponse('map.html', {"request": request})
+
+    @app.get('/api/inputs_geojson')
+    def get_geojson_input():
+        try:
+            geojson_dict = app.state.controller.shapes_to_geojson_dict()
+            if not geojson_dict:
+                raise HTTPException(status_code=500, detail="Erro ao converter shapefiles para GeoJSON.")
+            return JSONResponse(content=geojson_dict)
 
         except Exception as e:
             print(f'Erro no Endpoint: {e}')

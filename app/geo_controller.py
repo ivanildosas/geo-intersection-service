@@ -70,7 +70,26 @@ class GeoController:
             Logger.error('Rotina interrompida: erro ao ler GeoJSON', ct.OUT_MEDIA_JSON, '8/8')
             return None
         Logger.info('GeoJSON lido:', ct.OUT_MEDIA_JSON, '8/8')
-
         Logger.success("Rotina finalizada. Artefatos disponíveis.")
 
         return json_data
+
+    # Retorna dicionario com as camadas de entrada(shapefiles) em formato GeoJSON Data
+    def shapes_to_geojson_dict(self):
+        Logger.start('Rotina de conversão de shapefiles para GeoJsonData iniciada.')
+
+        count_shapes = len(ct.SHAPEFILE_PATH_LIST)
+        geojson_dict = {}
+
+        for i, shape_path in enumerate(ct.SHAPEFILE_PATH_LIST):
+            nome_camada = f'camada-{i+1}'
+            geojson_data = GeoService.shapefile_to_geojson(shape_path)
+            if not geojson_data:
+                Logger.error('Rotina interrompida: erro na conversão do shapefile', shape_path, f'{i+1}/{count_shapes}')
+                return None
+
+            geojson_dict[nome_camada] = geojson_data
+            Logger.info('GeoJsonData gerado do shapefile', shape_path, f'{i+1}/{count_shapes}')
+
+        Logger.success('Rotina finalizada.')
+        return geojson_dict

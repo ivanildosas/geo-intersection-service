@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geo Intersection Service</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&family=Roboto+Mono&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="/static/css/map.css">
+</head>
+<body>
+
+    <header class="main-header">
+        <h1>Geo Intersection Service</h1>
+        <div class="toolbar">
+            <a href="/" class="btn-home">Home</a>
+
+            <button id="btn-execute" 
+                    class="btn-primary"
+                    hx-get="/api/geojson" 
+                    hx-target="#output-section"
+                    hx-indicator="#status-badge">
+                Executar Interseção
+            </button>
+            <span id="status-badge" class="htmx-indicator badge">⏳ Processando...</span>
+        </div>
+    </header>
+
+    <main class="dashboard-grid">
+        <section class="map-container">
+            <div class="card-header">
+                <h2>Camadas de Entrada</h2>
+            </div>
+            <div id="map-input" class="map-container"></div>
+            <div id="table-input-container"></div>
+        </section>
+
+        <section id="output-section" class="map-container empty">
+            <div class="card-header">
+                <h2>Resultado da Interseção</h2>
+            </div>
+            <div id="map-output" class="map-container"></div>
+        </section>
+    </main>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/static/js/map.js"></script>
+</body>
+</html>

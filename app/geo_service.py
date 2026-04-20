@@ -266,3 +266,39 @@ class GeoService:
             return False
         finally:
             out_dset = None
+
+    @staticmethod
+    def shapefile_to_geojson(shape_path):
+        import uuid
+        vsimem_path = f'/vsimem/{uuid.uuid4()}.json'
+
+        try:
+            gdal.SetConfigOption('SHAPE_ENCODING', 'ISO-8859-1')
+
+            # Salva GeoJSON em memória
+            gdal.VectorTranslate(vsimem_path, shape_path, format='GeoJSON')
+
+            # Lê GeoJSON da memória
+            file = gdal.VSIFOpenL(vsimem_path, 'r')
+            if not file:
+                raise Exception("Não foi possível abrir o arquivo no vsimem")
+
+            gdal.VSIFSeekL(file, 0, 2)
+            size = gdal.VSIFTellL(file)
+            gdal.VSIFSeekL(file, 0, 0)
+
+            # Lê e decodifica
+            geojson_str = gdal.VSIFReadL(1, size, file).decode('utf-8')
+            gdal.VSIFCloseL(file)
+
+            # Converte de String para Dicionário
+            import json
+            geojson_data = json.loads(geojson_str)
+
+            return geojson_data
+
+        except Exception as e:
+            print(f"Erro ao gerar GeoJSON data: {e}")
+            raise e
+        finally:
+            gdal.Unlink(vsimem_path)

@@ -1,0 +1,155 @@
+:root {
+    --blue-main: #3498db;
+    --bg-light: #f4f7f6;
+    --text-dark: #2c3e50;
+}
+
+body {
+    margin: 0;
+    background-color: var(--bg-light);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--text-dark);
+}
+
+.main-header {
+    width: 98%;
+    margin: 10px auto; /* Centraliza e afasta do topo */
+    padding: 8px 2rem; /* Compacto verticalmente, respiro nas laterais */
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    box-sizing: border-box;
+    
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
+    /* margin-bottom: 15px;  */
+}
+
+.main-header h1 {
+    font-family: 'Montserrat', 'Segoe UI', sans-serif;
+    color: #3498db; /* Cor azul principal */
+    font-size: 1.5rem; /* Tamanho reduzido para elegância */
+    margin: 0;
+    line-height: 1.2;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.toolbar {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Divide em 2 colunas */
+    gap: 20px;
+    height: 50vh;
+    min-height: 300px; 
+    margin-bottom: 20px;
+
+    width: 98%;
+    margin-left: auto;
+    margin-right: auto;
+
+    margin-top: 10px; /* Garante que os mapas não toquem na barra de título */
+}
+
+.maps-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    height: 60vh;
+    margin-bottom: 20px;
+}
+
+.maps-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Divide em 2 colunas */
+    gap: 20px;
+    height: 500px;        /* <--- AQUI: Defina uma altura fixa ou 60vh */
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+.map-container {
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #dcdde1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    height: 100%; /* Ocupa a altura total da dashboard-grid */
+}
+
+#map-input, #map-output {
+    flex-grow: 1;      /* Faz o mapa ocupar o espaço restante do card */
+    width: 100%;
+    min-height: 350px; /* Garante um tamanho mínimo visual */
+    background: #e5e5e5;
+}
+
+.map-view {
+    flex-grow: 1;
+    min-height: 400px;
+    background: #e0e0e0;
+}
+
+.card-header {
+    padding: 4px 10px;
+    border-bottom: 1px solid #eee;
+    background: #fafafa;
+}
+
+.card-header h2 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    margin: 0;
+    letter-spacing: 1px;
+}
+
+
+
+/* Botões */
+.btn-primary {
+    display: none;
+    background: var(--blue-main);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-primary:hover { background: #2980b9; transform: translateY(-1px); }
+
+.btn-home {
+    background-color: var(--accent-color, #3498db); /* Azul do projeto */
+    color: white !important; /* Texto branco */
+    padding: 8px 16px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: background 0.3s ease;
+    border: none;
+}
+
+.btn-home:hover {
+    background-color: #2980b9; /* Um tom mais escuro ao passar o mouse */
+}
+
+.container-fluid {
+    width: 98%; /* Mesma largura dos mapas */
+    margin: 0 auto; /* Centraliza na tela */
+    padding-top: 20px;
+}
+
+.htmx-indicator { display: none; }
+.htmx-request .htmx-indicator { display: inline-block; }
+.badge { background: #f1c40f; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; }
