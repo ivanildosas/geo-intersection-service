@@ -1,55 +1,76 @@
-import os
 from app.geo_service import GeoService
 from app.csv_service import CsvService
 from app.json_service import JsonService
 import app.constants as ct
+from app.logger import Logger
 
 
 class GeoController:
     def __init__(self):
         self.geo_service = GeoService()
 
+    # Pipeline de execução de processamento dos arquivos shapefiles
     def intersect_pipeline(self):
 
-        print('\nProcessamento de shapefiles iniciado', flush=True)
+        Logger.start('Rotina de processamento espacial iniciada.')
 
         # 1. Valida os arquivos shapefiles
         for shape_path in ct.SHAPEFILE_PATH_LIST:
             if not self.geo_service.check_shapefile(shape_path):
-                raise ValueError(f'Processamento interrompido: {shape_path} inválido.')
-        print('(1/6) Validação de arquivos shapefiles concluída.', flush=True)
+                Logger.error('Rotina interrompida: shapefile inválido', shape_path, '1/8')
+                return None
+        Logger.info('Validação de shapefiles concluída.', None, '1/8')
 
         # 2. Intersecciona os shapefiles e cria os atributos banda(N)
         result_dataset = self.geo_service.intersect_shapes(ct.SHAPEFILE_PATH_LIST)
-        print('(2/6) Intersecção de geometrias concluída.', flush=True)
+        if result_dataset is None:
+            Logger.error('Rotina interrompida: erro ao interseccionar geometrias.', None, '2/8')
+            return None
+        Logger.info('Intersecção de geometrias finalizada.', None, '2/8')
 
-        # 3. Persiste a geometria resultante da intersecção em arquivo Shapefile
+        # 3. Persiste a geometria resultante da intersecção em arquivo shapefile
         file_created = self.geo_service.save_to_shapefile(result_dataset, ct.OUT_INTERSECT_SHP)
         if not file_created:
-            raise ValueError(f'Processamento interrompido: erro ao criar arquivo shapefile: {ct.OUT_INTERSECT_SHP}')
-        print(f'(3/6) Arquivo shapefile criado com sucesso: {ct.OUT_INTERSECT_SHP}', flush=True)
+            Logger.error('Rotina interrompida: erro ao gerar shapefile', ct.OUT_INTERSECT_SHP, '3/8')
+            return None
+        Logger.info('Shapefile gerado:', ct.OUT_INTERSECT_SHP, '3/8')
 
-        # 4. Cria atributo média na geometria resultante da interseção e persiste em Shapefile
+        # 4 Cria atributo média de bandas
         result_dataset = self.geo_service.create_field_media(result_dataset)
+        if result_dataset is None:
+            Logger.error('Rotina interrompida: erro ao gerar atributo média de bandas.', None, '4/8')
+            return None
+        Logger.info('Atributo média de bandas gerado.', None, '4/8')
+
+        # 5. Persiste a geometria com novo atributo em shapefile
         file_created = self.geo_service.save_to_shapefile(result_dataset, ct.OUT_MEDIA_SHP)
         if not file_created:
-            raise ValueError(f'Processamento interrompido: erro ao criar arquivo shapefile: {ct.OUT_MEDIA_SHP}')
-        print(f'(4/6) Arquivo shapefile criado com sucesso: {ct.OUT_MEDIA_SHP}')
+            Logger.error('Rotina interrompida: erro ao gerar shapefile', ct.OUT_MEDIA_SHP, '5/8')
+            return None
+        Logger.info('Shapefile gerado:', ct.OUT_MEDIA_SHP, '5/8')
 
-        # 5. Cria CSV com os atributos da geometria resultante da interseção
+        # 6. Cria CSV com os atributos da geometria resultante da interseção
         props = self.geo_service.get_layer_properties(result_dataset.GetLayer())
         file_created = CsvService.save_attributes_to_csv(props, ct.OUT_MEDIA_CSV)
         if not file_created:
-            raise ValueError(f'Processamento interrompido: erro ao criar arquivo CSV: {ct.OUT_MEDIA_CSV}')
-        print(f'(5/6) Arquivo CSV criado com sucesso: {ct.OUT_MEDIA_CSV}')
+            Logger.error('Rotina interrompida: erro ao gerar CSV', ct.OUT_MEDIA_CSV, '6/8')
+            return None
+        Logger.info('CSV gerado:', ct.OUT_MEDIA_CSV, '6/8')
 
-        # 6. Cria GeoJSON
+        # 7. Cria GeoJSON
         file_created = self.geo_service.save_to_geojson(result_dataset, ct.OUT_MEDIA_JSON)
         if not file_created:
-            raise ValueError(f'Processamento interrompido: erro ao criar arquivo GeoJSON: {ct.OUT_MEDIA_JSON}')
-        print(f'(6/6) Arquivo GeoJSON criado com sucesso: {ct.OUT_MEDIA_JSON}')
+            Logger.error('Rotina interrompida: erro ao gerar GeoJSON', ct.OUT_MEDIA_JSON, '7/8')
+            return None
+        Logger.info('GeoJSON gerado:', ct.OUT_MEDIA_JSON, '7/8')
 
+        # 8. Ler o arquivo GeoJSON criado
         json_data = JsonService.get_json_data(ct.OUT_MEDIA_JSON)
+        if not json_data:
+            Logger.error('Rotina interrompida: erro ao ler GeoJSON', ct.OUT_MEDIA_JSON, '8/8')
+            return None
+        Logger.info('GeoJSON lido:', ct.OUT_MEDIA_JSON, '8/8')
 
-        print("Processamento concluído com sucesso!\n")
+        Logger.success("Rotina finalizada. Artefatos disponíveis.")
+
         return json_data

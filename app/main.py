@@ -17,7 +17,7 @@ templates = Jinja2Templates(directory=path.join(ct.APP_PATH, 'templates'))
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print("Iniciando api-geo...")
+    # print("Iniciando api-geo...")
     app.state.controller = GeoController()
     yield
     print("Desligando api-geo...")
@@ -66,7 +66,7 @@ def configure_routes(app: FastAPI):
 
 def create_app() -> FastAPI:
     app = FastAPI(
-        title="Geo Intersection Service", 
+        title="Geo Intersection Service",
         version="1.0.0",
         lifespan=lifespan
     )
