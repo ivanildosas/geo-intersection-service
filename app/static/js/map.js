@@ -45,101 +45,64 @@ function init() {
 }
 
 // renderiza shapes de entrada
-
 async function carregarCamadasBase() {
     try {
-
         iniciarMonitoramento();
+        atualizarStatusBadge("⏳ Carregando camadas...", "processing");
 
         const response = await fetch('/api/inputs_geojson');
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            updateIntersectButton()
+            throw new Error(errorData.detail || `Erro no endpoint /api/inputs_geojson: ${response.status}`);
+        }
+
         const data = await response.json();
 
         inputLayerNames = Object.keys(data);
         let todasAsFeatures = [];
 
+        if (inputLayerNames.length === 0) {
+            atualizarStatusBadge("⚠️ Nenhuma camada de entrada encontrada.", "processing");
+            return;
+        }
+
         Object.keys(data).forEach(key => {
-            if (data[key].features) {
+            if (data[key] && data[key].features) {
                 data[key].features.forEach(f => {
                     f.properties.layerName = key; 
                 });
                 todasAsFeatures = todasAsFeatures.concat(data[key].features);
-            }
 
-            const geojsonLayer = L.geoJSON(data[key], {
-                style: { color: BASE_GEOM_COLOR, weight: 2, fillOpacity: 0.2 }
-            });
-            
-            geojsonLayer.options.layerName = key;
-            layerInputGroup.addLayer(geojsonLayer);
-        });
-
-        const bounds = L.featureGroup(layerInputGroup.getLayers()).getBounds();
-        if (bounds.isValid()) mapInput.fitBounds(bounds);
-
-        updateIntersectButton()
-        renderAttributeTable(todasAsFeatures, 'table-input-container', true);
-    } catch (err) {
-        atualizarStatusBadge("❌ Erro ao carregar camadas de entrada!", "error");
-        console.error("Erro ao carregar bases:", err);
-    } finally {
-        pararMonitoramento(); 
-        monitorarLogs();
-    }
-}
-
-/*
-async function carregarCamadasBase() {
-    const badge = document.getElementById('status-badge');
-    try {
-
-        const res = await fetch('/api/inputs_geojson');
-        if (!res.ok) throw new Error("Falha na API");
-        
-        const data = await res.json();
-        layerInputGroup.clearLayers();
-
-        let todasAsFeatures = [];
-
-        inputLayerNames = Object.keys(data);
-
-        Object.keys(data).forEach(key => {
-
-            if (data[key].features) {
-                data[key].features.forEach(f => {
-                    f.properties.layerName = key;
+                const geojsonLayer = L.geoJSON(data[key], {
+                    style: { color: BASE_GEOM_COLOR, weight: 2, fillOpacity: 0.2 }
                 });
-                todasAsFeatures = todasAsFeatures.concat(data[key].features);
-            }
-
-            const geojsonLayer = L.geoJSON(data[key], {
-                style: { color: '#3498db', weight: 2, fillOpacity: 0.2 }
-            });
-            layerInputGroup.addLayer(geojsonLayer);
-            
-            if(data[key].features) {
-                todasAsFeatures = todasAsFeatures.concat(data[key].features);
+                
+                geojsonLayer.options.layerName = key;
+                layerInputGroup.addLayer(geojsonLayer);
             }
         });
 
         const bounds = L.featureGroup(layerInputGroup.getLayers()).getBounds();
         if (bounds.isValid()) mapInput.fitBounds(bounds);
 
-        const dataParaTabela = {
-            type: "FeatureCollection",
-            features: todasAsFeatures
-        };
-
-        renderAttributeTable('table-input-container', dataParaTabela, ['ID_GBA', 'Área (m²)', 'Área (ha)', 'value']);
+        atualizarStatusBadge("✅ Camadas carregadas!", "success");
+        renderAttributeTable(todasAsFeatures, 'table-input-container', true);
 
     } catch (err) {
         console.error("Erro ao carregar bases:", err);
-        atualizarStatusBadge("❌ Erro: " + err.message, "error");
+        atualizarStatusBadge("❌ Erro ao carregar camadas de entrada!", "error");
+
+        const btn = document.getElementById('btn-intersect');
+        if (btn) btn.disabled = true;
+
     } finally {
+        updateIntersectButton();
         pararMonitoramento(); 
         monitorarLogs();
     }
 }
-*/
 
 // atualiza mapa resultado
 document.body.addEventListener('atualizarMapa', async () => {
@@ -152,8 +115,12 @@ document.body.addEventListener('atualizarMapa', async () => {
         atualizarStatusBadge("⏳ Carregando geometrias...", "processing");
 
         const response = await fetch('/api/read_output_geojson'); 
-        if (!response.ok) throw new Error("Erro ao buscar dados do mapa");
-        
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.detail || `Erro no endpoint /api/read_output_geojson: ${response.status}`);
+        }
+
         const data = await response.json();
 
         if (layerOutput) {
@@ -163,7 +130,7 @@ document.body.addEventListener('atualizarMapa', async () => {
         if (!data || !data.features || data.features.length === 0) {
             console.log("Resultado vazio, limpando mapa e tabela...");
             if (layerOutput) layerOutputGroup.clearLayers();
-                // atualizarStatusBadge(" Sem áreas de interseção!", "processing");
+            // atualizarStatusBadge(" Sem áreas de interseção!", "processing");
             // document.getElementById('table-results-container').innerHTML = "Sem áreas de interseção encontradas.";
             return;
         }
@@ -181,11 +148,12 @@ document.body.addEventListener('atualizarMapa', async () => {
         // atualizarStatusBadge("✅ Interseção realizada com sucesso!", "success");
 
     } catch (err) {
-        console.error("Erro ao renderizar mapa 2:", err);
-        atualizarStatusBadge("❌ Erro: " + err.message, "error");
+        console.error("Erro ao carregar resultado:", err);
+        atualizarStatusBadge("❌ Erro ao obter resultado da intersecção!", "error");
     } finally {
         pararMonitoramento(); 
         monitorarLogs();
+        updateIntersectButton()
     }
 });
 
@@ -236,132 +204,6 @@ function renderAttributeTable(features, containerId, isInputTable = false) {
         pararMonitoramento(); 
     });
 }
-
-/*
-function renderAttributeTable(containerId, geojsonData, specificColumns = null) {
-    const container = document.getElementById(containerId);
-    const isInputTable = containerId === 'table-input-container';
-    
-    if (!geojsonData || !geojsonData.features || geojsonData.features.length === 0) {
-        container.innerHTML = '';
-        return;
-    }
-
-    const features = geojsonData.features;
-    let headers = specificColumns || Object.keys(features[0].properties);
-    
-    // Adiciona "Intersect" ao início se for a tabela de entrada
-    if (isInputTable) {
-        headers = ['Intersect', ...headers];
-    }
-
-    let html = `
-        <div class="table-container">
-            <table class="data-table">
-                <thead>
-                    <tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr>
-                </thead>
-                <tbody>
-    `;
-
-    features.forEach((feature, index) => {
-        html += '<tr>';
-        headers.forEach(col => {
-            if (col === 'Intersect') {
-                const checkboxTd = document.createElement('td');
-                row.appendChild(checkboxTd);
-                checkboxTd.innerHTML = `<input type="checkbox" 
-                                            value="${feature.properties.layerName}" 
-                                            onchange="toggleLayerSelection(this, '${feature.properties.layerName}')">`;
-
-                
-                // O ID_GBA ou o nome da camada deve ser usado como identificador
-                //const layerId = feature.properties['ID_GBA'] || `layer-${index}`;
-                //html += `
-                  //  <td>
-                    //    <input type="checkbox" 
-                      //         class="layer-selector" 
-                        //       value="${layerId}" 
-                          //     onchange="toggleLayerSelection('${layerId}', this.checked)">
-                    //</td>`;
-                
-            } else {
-                let val = feature.properties[col];
-                // ... (mantenha a lógica de formatação numérica existente)
-                if (typeof val === 'number') {
-                    let decimals = col.includes('Área') ? 3 : 2;
-                    val = val.toLocaleString('pt-BR', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
-                }
-                const isNumeric = typeof feature.properties[col] === 'number';
-                html += `<td class="${isNumeric ? 'numeric' : ''}">${val ?? '-'}</td>`;
-            }
-        });
-        html += '</tr>';
-    });
-
-    html += '</tbody></table></div>';
-    container.innerHTML = html;
-    updateIntersectButton(); // Verifica estado inicial do botão
-}
-*/
-
-
-/*
-function renderAttributeTable(containerId, geojsonData, specificColumns = null) {
-    const container = document.getElementById(containerId);
-    
-    if (!geojsonData || !geojsonData.features || geojsonData.features.length === 0) {
-        container.innerHTML = '';
-        return;
-    }
-
-    const features = geojsonData.features;
-    const headers = specificColumns || Object.keys(features[0].properties);
-
-    let html = `
-        <div class="table-container">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        ${headers.map(h => `<th>${h}</th>`).join('')}
-                    </tr>
-                </thead>
-                <tbody>
-    `;
-
-    features.forEach(feature => {
-        html += '<tr>';
-        headers.forEach(col => {
-            let val = feature.properties[col];
-            
-            // Formatação Numérica (ABNT/BR)
-            if (typeof val === 'number') {
-                let decimals;
-
-                if (col.includes('Área')) {
-                    decimals = 3;
-                } else if (col.includes('banda') || col === 'media') {
-                    decimals = 2;
-                } else {
-                decimals = Number.isInteger(val) ? 0 : 2;
-            }
-
-            val = val.toLocaleString('pt-BR', { 
-                minimumFractionDigits: decimals, 
-                maximumFractionDigits: decimals 
-            });
-        }
-            
-            const isNumeric = typeof feature.properties[col] === 'number';
-            html += `<td class="${isNumeric ? 'numeric' : ''}">${val ?? '-'}</td>`;
-        });
-        html += '</tr>';
-    });
-
-    html += '</tbody></table></div>';
-    container.innerHTML = html;
-}
-*/
 
 function toggleLayerSelection(checkbox, layerName) {
     if (checkbox.checked) {
@@ -421,6 +263,12 @@ async function carregarTabelaResultado() {
 
         const badge = document.getElementById('status-badge');
         const response = await fetch('/api/read_output_geojson');
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.detail || `Erro no endpoint /api/read_output_geojson: ${response.status}`);
+        }
+
         const data = await response.json();
         
         if (data.features.length === 0) {
@@ -432,7 +280,7 @@ async function carregarTabelaResultado() {
         }
     } catch (err) {
         console.error("Erro ao carregar tabela de atributos:", err);
-        atualizarStatusBadge("❌ Erro: " + err.message, "error");
+        atualizarStatusBadge("❌ Erro ao carregar tabela de atributos", "error");
     } finally {
         pararMonitoramento(); 
         monitorarLogs();
@@ -467,6 +315,12 @@ function pararMonitoramento() {
 async function monitorarLogs() {
     try {
         const res = await fetch('/api/logs');
+
+        if (!res.ok) {
+            const errorData = await res.json().catch(() => ({}));
+            throw new Error(errorData.detail || `Erro no endpoint /api/logs: ${res.status}`);
+        }
+
         const data = await res.json();
         const consoleLog = document.getElementById('log-console');
 
@@ -482,6 +336,7 @@ async function monitorarLogs() {
         }
     } catch (err) {
         console.error("Erro ao ler logs:", err);
+        atualizarStatusBadge("❌ Erro ao ler logs!", "error");
         pararMonitoramento(); 
     }
 }
@@ -521,10 +376,6 @@ document.body.addEventListener('htmx:beforeRequest', function(evt) {
         btn.disabled = true;
     }
 });
-
-// document.body.addEventListener('atualizarMapa', () => {
-//     carregarTabelaResultado();
-// });
 
 document.body.addEventListener('htmx:afterRequest', function(evt) {
     if (evt.detail.elt.getAttribute('hx-post') === '/api/map_intersect') {

@@ -22,8 +22,8 @@ templates = Jinja2Templates(directory=path.join(ct.APP_PATH, 'templates'))
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     app.state.execution_logs = deque(maxlen=100)
-    app_logger = Logger(log_queue=app.state.execution_logs)
-    app.state.controller = GeoController(app_logger=app_logger)
+    app.state.logger = Logger(log_queue=app.state.execution_logs)
+    app.state.controller = GeoController(app_logger=app.state.logger)
     yield
 
 
@@ -51,12 +51,11 @@ def create_status_template(request: Request):
 def configure_routes(app: FastAPI):
 
     @app.get('/', response_class=HTMLResponse)
-    @app.get('/status', response_class=HTMLResponse)
     def read_root(request: Request):
         return create_status_template(request)
 
     @app.get('/api/output_geojson')
-    def get_geojson(self):
+    def get_geojson():
         try:
             geojson_data = app.state.controller.intersect_pipeline()
             if not geojson_data:
@@ -65,7 +64,7 @@ def configure_routes(app: FastAPI):
             return JSONResponse(content=geojson_data)
 
         except Exception as e:
-            self.app_logger.error(f'get_geojson() error: {e}')
+            app.state.logger.error(f'get_geojson() error: {e}')
             raise HTTPException(status_code=500, detail=str(e))
 
     @app.get('/map', response_class=HTMLResponse)
@@ -73,20 +72,20 @@ def configure_routes(app: FastAPI):
         return templates.TemplateResponse('map.html', {"request": request})
 
     @app.get('/api/inputs_geojson')
-    def get_geojson_input(self):
+    def get_geojson_input():
         try:
             geojson_dict = app.state.controller.shapes_to_geojson_dict()
             if not geojson_dict:
-                self.app_logger.error('Erro ao converter shapefiles para GeoJSON.')
+                app.state.logger.error('Erro ao converter shapefiles para GeoJSON.')
                 raise HTTPException(status_code=500, detail="Erro ao converter shapefiles para GeoJSON.")
             return JSONResponse(content=geojson_dict)
 
         except Exception as e:
-            self.app_logger.error(f'get_geojson_input() error: {e}')
+            app.state.logger.error(f'get_geojson_input() error: {e}')
             raise HTTPException(status_code=500, detail=str(e))
 
     @app.post('/api/map_intersect', response_class=HTMLResponse)
-    async def map_intersect(self, request: Request, layers: str = Form(None)):
+    async def map_intersect(request: Request, layers: str = Form(None)):
         try:
             if not layers:
                 raise HTTPException(status_code=400, detail="Nenhuma camada selecionada.")
@@ -94,6 +93,7 @@ def configure_routes(app: FastAPI):
             geojson_data = app.state.controller.intersect_pipeline(layers=lista_camadas)
 
             if not geojson_data:
+                app.state.logger.error('Erro ao processar geometrias.')
                 raise HTTPException(status_code=500, detail='Erro ao processar geometrias.')
 
             features = geojson_data.get('features', [])
@@ -108,7 +108,7 @@ def configure_routes(app: FastAPI):
             return response
 
         except Exception as e:
-            self.app_logger.error(f'map_intersect() error: {e}')
+            app.state.logger.error(f'map_intersect() error: {e}')
             return HTMLResponse(
                 content=f"<div class='error'>Erro no processamento das camadas: {str(e)}</div>",
                 status_code=500
@@ -126,7 +126,7 @@ def configure_routes(app: FastAPI):
 
 def create_app() -> FastAPI:
     app = FastAPI(
-        title='Geo Intersection Service',
+        title='Geo Intersect Service',
         version='1.0.0',
         lifespan=lifespan
     )
