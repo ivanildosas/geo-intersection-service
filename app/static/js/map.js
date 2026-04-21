@@ -159,50 +159,95 @@ document.body.addEventListener('atualizarMapa', async () => {
 
 function renderAttributeTable(features, containerId, isInputTable = false) {
 
-    iniciarMonitoramento();
-
     const container = document.getElementById(containerId);
     if (!container || features.length === 0) return;
 
-    let html = `<table class="data-table"><thead><tr>`;
+    iniciarMonitoramento();
+    container.innerHTML = '';
+    if (!features || features.length === 0) return;
+
+    const table = document.createElement('table');
+    table.className = 'data-table';
     
-    if (isInputTable) {
-        html += `<th>Ver</th><th>Intersect</th>`;
-    }
+    // Headers
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    
+    const fixedHeaders = ['Ocultar', 'Shapefile', 'Intersect'];
+    const propertiesHeaders = Object.keys(features[0].properties).filter(h => h !== 'layerName');
+    const allHeaders = [...fixedHeaders, ...propertiesHeaders];
 
-    const headers = Object.keys(features[0].properties);
-    headers.forEach(header => {
-        html += `<th>${header}</th>`;
+    allHeaders.forEach((header, index) => {
+        const th = document.createElement('th');
+        th.textContent = header;
+        
+        if (isInputTable) {
+            if ([0, 2, 3, 5].includes(index)) {
+                th.classList.add('col-size');
+                if (index === 2) th.classList.add('col-shapefile');
+            }
+            if (index < 3) th.classList.add('col-highlight'); 
+        }
+        headerRow.appendChild(th);
     });
-    html += `</tr></thead><tbody></tbody></table>`;
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
 
-    container.innerHTML = html;
-    const tbody = container.querySelector('tbody');
-
+    // Dados
+    const tbody = document.createElement('tbody');
     features.forEach(feature => {
-        const row = document.createElement('tr'); 
+        const row = document.createElement('tr');
+        const layerName = feature.properties.layerName;
 
         if (isInputTable) {
-            const layerId = feature.properties.layerName;
+            const tdVis = document.createElement('td');
+            tdVis.className = 'col-highlight'; 
+            tdVis.innerHTML  = `<button class="btn-view" onclick="toggleLayerVisibility(this, '${layerName}')">👁️</button>`;
+            row.appendChild(tdVis);
 
-            const visTd = document.createElement('td');
-            visTd.innerHTML = `<button class="btn-view" onclick="toggleLayerVisibility(this, '${layerId}')">👁️</button>`;
-            row.appendChild(visTd);
-
+            const tdName = document.createElement('td');
+            tdName.className = 'col-highlight sticky-col';
+            tdName.textContent = layerName;
+            row.appendChild(tdName);
+       
             const checkTd = document.createElement('td');
-            checkTd.innerHTML = `<input type="checkbox" value="${layerId}" onchange="toggleLayerSelection(this, '${layerId}')">`;
+            checkTd.className = 'col-highlight'; 
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.value = layerName;
+            checkbox.onchange = function() { toggleLayerSelection(this, layerName); };
+            checkTd.appendChild(checkbox);
             row.appendChild(checkTd);
-        }
+        } 
 
-        headers.forEach(header => {
+        propertiesHeaders.forEach(header => {
             const td = document.createElement('td');
-            td.textContent = feature.properties[header];
+            let value = feature.properties[header];
+
+            if (typeof value === 'number') {
+                td.classList.add('numeric');
+                if (header.includes('Área')) {
+                    value = value.toLocaleString('pt-BR', { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+                } else if (header.includes('media')) {
+                    value = value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                } 
+            }
+            td.textContent = value;
             row.appendChild(td);
         });
 
         tbody.appendChild(row);
-        pararMonitoramento(); 
     });
+    
+    table.appendChild(tbody);
+    
+    const wrapper = document.createElement('div');
+    wrapper.className = 'table-container';
+    wrapper.appendChild(table);
+    container.appendChild(wrapper);
+    
+    pararMonitoramento();
+   
 }
 
 function toggleLayerSelection(checkbox, layerName) {

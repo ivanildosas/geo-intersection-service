@@ -4,7 +4,7 @@
             <tr>
                 {% if features|length > 0 %}
                     {% for key in features[0].properties.keys() %}
-                        <th>{{ key }}</th>
+                        <th class="{{ 'numeric' if key == 'Área (m²)' or key == 'Área (ha)' else 'col-center' }}">{{ key }}</th>
                     {% endfor %}
                 {% endif %}
             </tr>

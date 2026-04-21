@@ -268,13 +268,12 @@ header.main-header {
 .data-table th {
     text-align: center !important; 
     background-color: #f8f9fa;
-    text-align: center !important;
 }
 
 .data-table th, 
 .data-table td {
     vertical-align: middle !important;
-    padding: 2px 12px;
+    padding: 5px 5px;
     text-align: left; 
     border-bottom: 1px solid #eee;
 }
@@ -285,14 +284,22 @@ header.main-header {
     font-family: 'Roboto Mono', monospace; 
 }
 
-.data-table th:nth-child(n+2), 
-.data-table td:nth-child(n+2) {
+.data-table th:nth-child(n+5), 
+.data-table td:nth-child(n+5) {
     text-align: right !important;
 }
 
+
+#table-results-container .data-table th:nth-child(n+4), 
+#table-results-container .data-table td:nth-child(n+4) {
+    text-align: center !important;
+}
+
+
+
 .data-table th:first-child, 
 .data-table td:first-child {
-    text-align: left !important;
+    text-align: center !important;
     padding-left: 25px; 
 }
 
@@ -301,35 +308,9 @@ header.main-header {
 }
 
 .data-table tbody tr:hover {
-    background-color: #f1f4f7;
+    background-color: #dedede !important; 
     transition: background-color 0.2s ease;
 }
-
-/*
-.card {
-    background: white;
-    border-radius: 8px;
-    border: 1px solid #dcdde1;
-    margin-top: 20px;
-    margin-bottom: 20px;
-    overflow: hidden;
-
-    width: 100%; 
-    max-width: 100%;
-    box-sizing: border-box;
-}
-
-.log-content {
-    background-color: #ffffff;
-    color: #555;
-    font-family: 'Roboto Mono', monospace;
-    font-size: 13px;
-    padding: 15px;
-    height: 150px;
-    overflow-y: auto;
-    line-height: 1.6;
-}
-*/
 
 .card {
    background: white;
@@ -386,6 +367,104 @@ header.main-header {
     margin-left: auto;
     margin-right: auto;
     height: 15vh;
+}
+
+.col-highlight {
+    background-color: #f8faff;
+    border-right: 1px solid #e0e6ed !important;
+    text-align: center !important;
+    font-weight: 500;
+    width: 60px;
+    min-width: 60px;
+    max-width: 60px;
+}
+
+th.col-highlight {
+    text-align: center !important;
+    vertical-align: middle;
+    font-size: 0.75rem;
+    color: var(--text-dark);
+}
+
+th.col-size{
+    text-align: center;
+    vertical-align: middle;
+    width: 60px;
+    min-width: 60px;
+    max-width: 60px;
+}
+
+td.col-highlight.sticky-col {
+    color: var(--blue-main);
+    font-size: 0.85rem;
+    white-space: nowrap;
+    padding-right: 15px;
+    text-align: center !important;
+
+    min-width: 120px;
+    /* max-width: 120px; */
+    overflow: hidden;
+}
+
+.btn-vis {
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: transform 0.2s;
+    max-width: 40px;
+}
+
+.btn-vis:hover {
+    transform: scale(1.2);
+}
+
+.data-table tbody tr:hover td {
+    background-color: #ebf3ff !important; /* Cor de destaque ao passar o mouse */
+    cursor: pointer;
+}
+
+.data-table thead th.col-highlight {
+    background-color: #f1f4f7 !important;
+    color: #34495e;
+    font-size: 12px;
+    font-weight: 750;
+    text-transform: uppercase;
+    text-align: center !important;
+    vertical-align: middle;
+    letter-spacing: 0.5px;
+    /* padding: 8px 5px; */
+    border-bottom: 2px solid #3498db;
+}
+
+#result-table thead th {
+    text-align: center !important;
+    vertical-align: middle;
+    text-transform: uppercase;
+    font-size: 11px;
+    padding: 10px 5px;
+    background-color: #f1f4f7;
+    color: #34495e;
+    font-weight: 700;
+}
+
+/* Alinhamento dos valores na segunda tabela */
+#result-table tbody td {
+    padding: 8px 12px;
+    vertical-align: middle;
+}
+
+/* Números e áreas: sempre à direita para facilitar comparação decimal */
+.col-number {
+    text-align: right !important;
+    font-family: 'Courier New', monospace; /* Opcional: fonte mono ajuda na leitura de números */
+    font-weight: 500;
+}
+
+/* Colunas de texto ou ícones na segunda tabela: centralizados */
+.col-center {
+    text-align: center !important;
+    vertical-align: middle;
+    padding: 8px 5px;
 }
 
 .log-info { color: #2c3e50; }

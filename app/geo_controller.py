@@ -98,7 +98,7 @@ class GeoController:
         if not geojson_data:
             self.app_logger.error('Erro na leitura do GeoJSON', file_path)
             return None
-        self.app_logger.success('GeoJSON lido', file_path)
+        # self.app_logger.success('GeoJSON lido', file_path)
         return geojson_data
 
     # Retorna dicionario com as camadas de entrada(shapefiles) em formato GeoJSON Data
