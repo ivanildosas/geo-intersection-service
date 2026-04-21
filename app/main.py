@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 
-from fastapi import FastAPI, HTTPException, Request, Response
+from fastapi import FastAPI, HTTPException, Request, Response, Form
 from fastapi.responses import FileResponse, JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -91,10 +91,14 @@ def configure_routes(app: FastAPI):
             print(f'Erro no Endpoint: {e}')
             raise HTTPException(status_code=500, detail=str(e))
 
-    @app.get('/api/map_intersect', response_class=HTMLResponse)
-    async def map_intersect(request: Request):
+    @app.post('/api/map_intersect', response_class=HTMLResponse)
+    async def map_intersect(request: Request, layers: str = Form(None)):
         try:
-            geojson_data = app.state.controller.intersect_pipeline()
+            if not layers:
+                raise HTTPException(status_code=400, detail="Nenhuma camada selecionada.")
+            lista_camadas = layers.split(',')
+            geojson_data = app.state.controller.intersect_pipeline(layers=lista_camadas)
+
             if not geojson_data:
                 raise HTTPException(status_code=500, detail='Erro ao processar geometrias.')
 
@@ -102,7 +106,7 @@ def configure_routes(app: FastAPI):
             response = templates.TemplateResponse(
                 'table_results.html',
                 {
-                    'request': request, 
+                    'request': request,
                     'features': features
                 }
             )

@@ -87,7 +87,7 @@ class GeoService:
 
     # Inclui o atributo 'media' no dataset e preenche seu valor
     @staticmethod
-    def create_field_media(dataset, layer_name='Intersect'):
+    def create_field_media(dataset, shapes_count, layer_name='Intersect'):
 
         layer = dataset.GetLayer()
 
@@ -106,7 +106,7 @@ class GeoService:
                     value = feature.GetField(field_name)
                     media += value
 
-            media_value = round((media/ct.SHAPEFILE_COUNT), 2)
+            media_value = round((media/shapes_count), 2)
             media_index = feature.GetFieldIndex(FieldNames.MEDIA)
             feature.SetField(media_index, media_value)
             layer.SetFeature(feature)
@@ -190,12 +190,12 @@ class GeoService:
         return dataset
 
     # Intersecta as geomterias dos 2 datasets
-    def intersect_geometries(self, dataset_a, dataset_b):
+    def intersect_geometries(self, dataset_a, dataset_b, shapes_count):
         layer_a = dataset_a.GetLayer()
         layer_b = dataset_b.GetLayer()
 
-        mem_dset = self.create_memory_dataset(ct.SHAPEFILE_COUNT, FieldNames.PREFIX_BANDA)
-        m_dset = self.create_dataset_fields(mem_dset, ct.SHAPEFILE_COUNT, FieldNames.PREFIX_BANDA)
+        mem_dset = self.create_memory_dataset(shapes_count, FieldNames.PREFIX_BANDA)
+        m_dset = self.create_dataset_fields(mem_dset, shapes_count, FieldNames.PREFIX_BANDA)
         out_layer = m_dset.GetLayer()
 
         layer_a.ResetReading()
@@ -205,12 +205,12 @@ class GeoService:
             for feature_b in layer_b:
                 geom_b = feature_b.GetGeometryRef()
                 if not geom_a.Intersects(geom_b):
-                    empty_dset = self.create_memory_dataset(ct.SHAPEFILE_COUNT, FieldNames.PREFIX_BANDA)
+                    empty_dset = self.create_memory_dataset(shapes_count, FieldNames.PREFIX_BANDA)
                     return empty_dset
 
                 out_geom = geom_a.Intersection(geom_b)
                 if out_geom.IsEmpty():
-                    empty_dset = self.create_memory_dataset(ct.SHAPEFILE_COUNT, FieldNames.PREFIX_BANDA)
+                    empty_dset = self.create_memory_dataset(shapes_count, FieldNames.PREFIX_BANDA)
                     return empty_dset
 
                 new_feature = ogr.Feature(out_layer.GetLayerDefn())
@@ -227,12 +227,14 @@ class GeoService:
         out_dset = dataset_a = None
         field_dict = {}
 
+        shapes_count = len(shape_list)
+
         for i in range(1, len(shape_list)):
             if dataset_a is None:
                 dataset_a = esri_driver.Open(shape_list[i-1], 0)
 
             dataset_b = esri_driver.Open(shape_list[i], 0)
-            out_dset = self.intersect_geometries(dataset_a, dataset_b)
+            out_dset = self.intersect_geometries(dataset_a, dataset_b, shapes_count)
 
             out_layer = out_dset.GetLayer()
             if out_layer is None or out_layer.GetFeatureCount() == 0:

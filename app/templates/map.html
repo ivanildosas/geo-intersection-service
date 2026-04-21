@@ -20,8 +20,9 @@
 
         <!--  -->
         <div class="toolbar">
-            <button class="btn-home" 
-                    hx-get="/api/map_intersect" 
+            <button id="btn-intersect"
+                    class="btn-home" 
+                    hx-post="/api/map_intersect" 
                     hx-target="#table-results-container" 
                     hx-indicator="#status-badge">
                 Intersect Shapes

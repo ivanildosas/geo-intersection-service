@@ -110,7 +110,7 @@ header.main-header {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
-    height: 60vh;
+    height: 55vh;
     margin-bottom: 20px;
 }
 
@@ -244,8 +244,8 @@ header.main-header {
     background: white;
     border-radius: 8px;
     border: 1px solid #dcdde1;
-    height: 14vh;
-    min-height: 100px;
+    height: 22vh;
+    min-height: 150px;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -335,10 +335,9 @@ header.main-header {
    background: white;
     border-radius: 8px;
     border: 1px solid #dcdde1;
-    margin: 10px auto; /* Centraliza o card */
+    margin: 10px auto; 
     overflow: hidden;
     
-    /* Use a mesma largura das grids acima para manter simetria */
     width: 99%; 
     box-sizing: border-box;
 }
@@ -349,7 +348,7 @@ header.main-header {
     font-family: 'Roboto Mono', monospace;
     font-size: 13px;
     padding: 15px;
-    height: 150px; 
+    height: 10vh;
     overflow-y: auto;
     overflow-x: hidden;
     line-height: 1.6;
@@ -386,7 +385,7 @@ header.main-header {
     max-width: calc(100% - 10px); 
     margin-left: auto;
     margin-right: auto;
-    height: 25vh;
+    height: 15vh;
 }
 
 .log-info { color: #2c3e50; }

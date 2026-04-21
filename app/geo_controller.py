@@ -1,3 +1,5 @@
+from os import path
+from pathlib import Path
 from app.geo_service import GeoService
 from app.csv_service import CsvService
 from app.json_service import JsonService
@@ -10,19 +12,27 @@ class GeoController:
         self.geo_service = GeoService()
 
     # Pipeline de execução de processamento dos arquivos shapefiles
-    def intersect_pipeline(self):
+    def intersect_pipeline(self, layers=None):
+        print(f'layers: {layers}')
 
+        shapes_path_list = ct.SHAPEFILE_PATH_LIST
+        if layers is not None:
+            shapes_path_list = [str(Path(ct.SHAPES_FOLDER) / x) for x in layers]
+            
+        print(f'shapes_path_list: {shapes_path_list}')
+        
+        shapes_count = len(shapes_path_list)
         self.app_logger.start('Rotina de processamento espacial iniciada.')
 
         # 1. Valida os arquivos shapefiles
-        for shape_path in ct.SHAPEFILE_PATH_LIST:
+        for shape_path in shapes_path_list:
             if not self.geo_service.check_shapefile(shape_path):
                 self.app_logger.error('Rotina interrompida: shapefile inválido', shape_path, '1/8')
                 return None
         self.app_logger.info('Validação de shapefiles concluída.', None, '1/8')
 
         # 2. Intersecciona os shapefiles e cria os atributos banda(N)
-        result_dataset = self.geo_service.intersect_shapes(ct.SHAPEFILE_PATH_LIST)
+        result_dataset = self.geo_service.intersect_shapes(shapes_path_list)
         if result_dataset is None:
             self.app_logger.error('Rotina interrompida: erro ao interseccionar geometrias.', None, '2/8')
             return None
@@ -41,7 +51,8 @@ class GeoController:
         self.app_logger.info('Shapefile gerado:', ct.OUT_INTERSECT_SHP, '3/8')
 
         # 4 Cria atributo média de bandas
-        result_dataset = self.geo_service.create_field_media(result_dataset)
+        print(self.geo_service.get_layer_properties(result_dataset.GetLayer()))
+        result_dataset = self.geo_service.create_field_media(result_dataset, shapes_count)
         if result_dataset is None:
             self.app_logger.error('Rotina interrompida: erro ao gerar atributo média de bandas.', None, '4/8')
             return None
@@ -80,7 +91,7 @@ class GeoController:
 
             self.app_logger.error('Rotina interrompida: erro ao ler GeoJSON', ct.OUT_MEDIA_JSON, '8/8')
             return None
-        self.app_logger.info('GeoJSON lido:', ct.OUT_MEDIA_JSON, '8/8')
+        # self.app_logger.info('GeoJSON lido:', ct.OUT_MEDIA_JSON, '8/8')
 
         self.app_logger.success("Rotina finalizada. Artefatos disponíveis.")
 
@@ -98,18 +109,21 @@ class GeoController:
     def shapes_to_geojson_dict(self):
         self.app_logger.start('Rotina de conversão de shapefiles para GeoJsonData iniciada.')
 
-        count_shapes = len(ct.SHAPEFILE_PATH_LIST)
         geojson_dict = {}
+        shapes_count = len(ct.SHAPEFILE_PATH_LIST)
 
         for i, shape_path in enumerate(ct.SHAPEFILE_PATH_LIST):
-            nome_camada = f'camada-{i+1}'
+
+            #  nome_camada = f'camada-{i+1}'
+            nome_camada = path.basename(shape_path)
+
             geojson_data = GeoService.shapefile_to_geojson(shape_path)
             if not geojson_data:
-                self.app_logger.error('Rotina interrompida: erro na conversão do shapefile', shape_path, f'{i+1}/{count_shapes}')
+                self.app_logger.error('Rotina interrompida: erro na conversão do shapefile', shape_path, f'{i+1}/{shapes_count}')
                 return None
 
             geojson_dict[nome_camada] = geojson_data
-            self.app_logger.info('GeoJsonData gerado do shapefile', shape_path, f'{i+1}/{count_shapes}')
+            self.app_logger.info('GeoJsonData gerado do shapefile', shape_path, f'{i+1}/{shapes_count}')
 
         self.app_logger.success('Rotina finalizada.')
         return geojson_dict
