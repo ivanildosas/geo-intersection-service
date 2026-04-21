@@ -1,13 +1,16 @@
 import csv
-
+from pathlib import Path
 
 class CsvService:
 
     # Salva lista de dicionários em arquivo CSV
     @staticmethod
     def save_attributes_to_csv(property_list, output_path):
+
+        out_path = Path(output_path)
+        out_path.unlink(missing_ok=True)
+
         if not property_list:
-            print(f'Lista de propriedades vazia, arquivo CSV {output_path} não foi criado.')
             return False
 
         headers = list(property_list[0].keys())
@@ -19,7 +22,7 @@ class CsvService:
             return True
         except PermissionError:
             print(f"Erro: O arquivo {output_path} está aberto. Feche-o e tente novamente.")
-            return False
+            return None
         except Exception as e:
             print(f"Erro ao salvar arquivo CSV: {e}")
-            return False
+            return None

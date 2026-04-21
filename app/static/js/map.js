@@ -3,7 +3,7 @@ let mapInput, mapOutput;
 let layerInputGroup, layerOutputGroup;
 let layerOutput = null;
 
-
+// Inicializa mapas
 function init() {
     console.log("Iniciando...");
     
@@ -24,6 +24,8 @@ function init() {
     layerInputGroup = L.layerGroup().addTo(mapInput);
     layerOutputGroup = L.layerGroup().addTo(mapOutput);
 
+    configurarSincronizacao();
+
     setTimeout(() => {
         mapInput.invalidateSize();
         mapOutput.invalidateSize();
@@ -31,7 +33,7 @@ function init() {
     }, 400);
 }
 
-
+// renderiza shapes de entrada
 async function carregarCamadasBase() {
     const badge = document.getElementById('status-badge');
     try {
@@ -41,28 +43,42 @@ async function carregarCamadasBase() {
         const data = await res.json();
         layerInputGroup.clearLayers();
 
+        let todasAsFeatures = [];
+
         Object.keys(data).forEach(key => {
             const geojsonLayer = L.geoJSON(data[key], {
                 style: { color: '#3498db', weight: 2, fillOpacity: 0.2 }
             });
             layerInputGroup.addLayer(geojsonLayer);
+            
+            if(data[key].features) {
+                todasAsFeatures = todasAsFeatures.concat(data[key].features);
+            }
         });
 
         const bounds = L.featureGroup(layerInputGroup.getLayers()).getBounds();
         if (bounds.isValid()) mapInput.fitBounds(bounds);
 
+        const dataParaTabela = {
+            type: "FeatureCollection",
+            features: todasAsFeatures
+        };
+
+        renderAttributeTable('table-input-container', dataParaTabela, ['ID_GBA', 'Área (m²)', 'Área (ha)', 'value']);
+
     } catch (err) {
         console.error("Erro ao carregar bases:", err);
-        if (badge) badge.innerText = "❌ Erro ao carregar bases";
+        atualizarStatusBadge("❌ Erro: " + err.message, "error");
     }
 }
 
+// atualiza mapa resultado
 document.body.addEventListener('atualizarMapa', async () => {
     console.log("Evento 'atualizarMapa' Iniciando carga do Mapa 2...");
     const badge = document.getElementById('status-badge');
 
     try {
-        if (badge) badge.innerText = "Carregando geometrias...";
+        atualizarStatusBadge("⏳ Carregando geometrias...", "processing");
 
         const response = await fetch('/api/read_output_geojson'); 
         if (!response.ok) throw new Error("Erro ao buscar dados do mapa");
@@ -70,7 +86,14 @@ document.body.addEventListener('atualizarMapa', async () => {
         const data = await response.json();
 
         if (layerOutput) {
-            layerOutputGroup.clearLayers();
+            mapOutput.removeLayer(layerOutput);
+        }
+
+        if (!data || !data.features || data.features.length === 0) {
+            console.log("Resultado vazio, limpando mapa e tabela...");
+            if (layerOutput) layerOutputGroup.clearLayers();
+            document.getElementById('table-results-container').innerHTML = "Sem áreas de interseção encontradas.";
+            return;
         }
 
         layerOutput = L.geoJSON(data, {
@@ -81,14 +104,137 @@ document.body.addEventListener('atualizarMapa', async () => {
             }
         }).addTo(layerOutputGroup);
 
-        // Ajusta o zoom para enquadrar o resultado
         mapOutput.fitBounds(layerOutput.getBounds());
 
-        if (badge) badge.innerText = "Mapa atualizado";
+        atualizarStatusBadge("✅ Mapa atualizado!", "success");
 
     } catch (err) {
         console.error("Erro ao renderizar mapa 2:", err);
-        if (badge) badge.innerText = "Erro na renderização";
+        atualizarStatusBadge("❌ Erro: " + err.message, "error");
+    }
+});
+
+// renderiza tabela de atributos
+function renderAttributeTable(containerId, geojsonData, specificColumns = null) {
+    const container = document.getElementById(containerId);
+    
+    if (!geojsonData || !geojsonData.features || geojsonData.features.length === 0) {
+        container.innerHTML = '';
+        return;
+    }
+
+    const features = geojsonData.features;
+    const headers = specificColumns || Object.keys(features[0].properties);
+
+    let html = `
+        <div class="table-container">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        ${headers.map(h => `<th>${h}</th>`).join('')}
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+
+    features.forEach(feature => {
+        html += '<tr>';
+        headers.forEach(col => {
+            let val = feature.properties[col];
+            
+            // Formatação Numérica (ABNT/BR)
+            if (typeof val === 'number') {
+                let decimals;
+
+                if (col.includes('Área')) {
+                    decimals = 3;
+                } else if (col.includes('banda') || col === 'media') {
+                    decimals = 2;
+                } else {
+                decimals = Number.isInteger(val) ? 0 : 2;
+            }
+
+            val = val.toLocaleString('pt-BR', { 
+                minimumFractionDigits: decimals, 
+                maximumFractionDigits: decimals 
+            });
+        }
+            
+            const isNumeric = typeof feature.properties[col] === 'number';
+            html += `<td class="${isNumeric ? 'numeric' : ''}">${val ?? '-'}</td>`;
+        });
+        html += '</tr>';
+    });
+
+    html += '</tbody></table></div>';
+    container.innerHTML = html;
+}
+
+function configurarSincronizacao() {
+    mapInput.on('move', () => {
+        mapOutput.setView(mapInput.getCenter(), mapInput.getZoom(), { animate: false });
+    });
+
+    mapOutput.on('move', () => {
+        mapInput.setView(mapOutput.getCenter(), mapOutput.getZoom(), { animate: false });
+    });
+}
+
+async function carregarTabelaResultado() {
+    try {
+        const badge = document.getElementById('status-badge');
+        const response = await fetch('/api/read_output_geojson');
+        const data = await response.json();
+        
+        if (data.features.length === 0) {
+            atualizarStatusBadge("⚠️ As geometrias não tem áreas de interseção", "processing");
+            document.getElementById('table-results-container').innerHTML = "";
+        } else {
+            atualizarStatusBadge("✅ Interseção realiza com sucesso!", "success");
+            renderAttributeTable('table-results-container', data);
+        }
+    } catch (err) {
+        console.error("Erro ao carregar tabela de atributos:", err);
+        atualizarStatusBadge("❌ Erro: " + err.message, "error");
+    }
+}
+
+function atualizarStatusBadge(mensagem, tipo) {
+    const badge = document.getElementById('status-badge');
+    if (!badge) return;
+
+    badge.innerText = mensagem;
+    badge.classList.remove('success', 'error', 'processing');
+
+    if (tipo === 'success') {
+        badge.classList.add('success');
+    } else if (tipo === 'error') {
+        badge.classList.add('error');
+    } else if (tipo === 'processing') {
+        badge.classList.add('processing');
+    }
+}
+
+
+document.body.addEventListener('htmx:beforeRequest', function(evt) {
+    if (evt.detail.elt.getAttribute('hx-get') === '/api/map_intersect') {
+        const badge = document.getElementById('status-badge');
+        const btn = evt.detail.elt;
+
+        // Atualiza o Badge
+        atualizarStatusBadge("⏳ Processando interseção...", "processing");
+        btn.disabled = true;
+    }
+});
+
+// document.body.addEventListener('atualizarMapa', () => {
+//     carregarTabelaResultado();
+// });
+
+document.body.addEventListener('htmx:afterRequest', function(evt) {
+    if (evt.detail.elt.getAttribute('hx-get') === '/api/map_intersect') {
+        evt.detail.elt.disabled = false;
+        carregarTabelaResultado(); 
     }
 });
 

@@ -1,7 +1,10 @@
+import json
 from os import path
 from shapely import wkt as shapely_wkt
 from pyproj import Geod
 from osgeo import osr, ogr, gdal
+from pprint import pprint
+
 
 import app.constants as ct
 import app.util as util
@@ -85,7 +88,9 @@ class GeoService:
     # Inclui o atributo 'media' no dataset e preenche seu valor
     @staticmethod
     def create_field_media(dataset, layer_name='Intersect'):
+
         layer = dataset.GetLayer()
+
         field_media = ogr.FieldDefn(FieldNames.MEDIA, ogr.OFTReal)
         field_media.SetPrecision(2)
         layer.CreateField(field_media)
@@ -156,7 +161,15 @@ class GeoService:
         spatial_ref = self.create_spatial_ref(ct.DATUM)
         mem_driver = ogr.GetDriverByName('Memory')
         mem_dset = mem_driver.CreateDataSource("mem_data_source")
-        layer = mem_dset.CreateLayer("Intersect", spatial_ref, ogr.wkbMultiPolygon)
+        mem_dset.CreateLayer("Intersect", spatial_ref, ogr.wkbMultiPolygon)
+        return mem_dset
+
+    @staticmethod
+    def create_dataset_fields(dataset, new_field_number, new_field_prefix):
+        if dataset is None:
+            return None
+
+        layer = dataset.GetLayer()
 
         # Cria os Atributos ID_GBA e Área
         layer.CreateField(ogr.FieldDefn(FieldNames.ID_GBA, ogr.OFTInteger))
@@ -174,7 +187,7 @@ class GeoService:
         # Cria os novos atributos
         for i in range(1, new_field_number + 1):
             layer.CreateField(ogr.FieldDefn(f"{new_field_prefix}{i}", ogr.OFTReal))
-        return mem_dset
+        return dataset
 
     # Intersecta as geomterias dos 2 datasets
     def intersect_geometries(self, dataset_a, dataset_b):
@@ -182,7 +195,8 @@ class GeoService:
         layer_b = dataset_b.GetLayer()
 
         mem_dset = self.create_memory_dataset(ct.SHAPEFILE_COUNT, FieldNames.PREFIX_BANDA)
-        out_layer = mem_dset.GetLayer()
+        m_dset = self.create_dataset_fields(mem_dset, ct.SHAPEFILE_COUNT, FieldNames.PREFIX_BANDA)
+        out_layer = m_dset.GetLayer()
 
         layer_a.ResetReading()
         for feature_a in layer_a:
@@ -190,16 +204,22 @@ class GeoService:
 
             for feature_b in layer_b:
                 geom_b = feature_b.GetGeometryRef()
-                if geom_a.Intersects(geom_b):
-                    out_geom = geom_a.Intersection(geom_b)
-                    if out_geom.IsEmpty():
-                        continue
-                    new_feature = ogr.Feature(out_layer.GetLayerDefn())
-                    new_feature.SetGeometry(out_geom)
-                    out_layer.CreateFeature(new_feature)
+                if not geom_a.Intersects(geom_b):
+                    empty_dset = self.create_memory_dataset(ct.SHAPEFILE_COUNT, FieldNames.PREFIX_BANDA)
+                    return empty_dset
+
+                out_geom = geom_a.Intersection(geom_b)
+                if out_geom.IsEmpty():
+                    empty_dset = self.create_memory_dataset(ct.SHAPEFILE_COUNT, FieldNames.PREFIX_BANDA)
+                    return empty_dset
+
+                new_feature = ogr.Feature(out_layer.GetLayerDefn())
+                new_feature.SetGeometry(out_geom)
+                out_layer.CreateFeature(new_feature)
+
             layer_b.ResetReading()
 
-        return mem_dset
+        return m_dset
 
     # Itera a lista de shapes e realiza intersecção booleana
     def intersect_shapes(self, shape_list):
@@ -213,6 +233,10 @@ class GeoService:
 
             dataset_b = esri_driver.Open(shape_list[i], 0)
             out_dset = self.intersect_geometries(dataset_a, dataset_b)
+
+            out_layer = out_dset.GetLayer()
+            if out_layer is None or out_layer.GetFeatureCount() == 0:
+                return out_dset
 
             # Insere no dicionário o nome e valor do atributo 'value'
             for d_set in [dataset_a, dataset_b]:
@@ -295,6 +319,8 @@ class GeoService:
             import json
             geojson_data = json.loads(geojson_str)
 
+            # pprint(geojson_data)
+
             return geojson_data
 
         except Exception as e:
@@ -302,3 +328,22 @@ class GeoService:
             raise e
         finally:
             gdal.Unlink(vsimem_path)
+
+    @staticmethod
+    def datasource_to_geojson(datasource):
+        vsimem_path = '/vsimem/empty.geojson'
+        gdal.VectorTranslate(vsimem_path, datasource, format='GeoJSON')
+
+        file = gdal.VSIFOpenL(vsimem_path, 'r')
+        if not file:
+            return {"type": "FeatureCollection", "features": []}
+
+        gdal.VSIFSeekL(file, 0, 2)
+        size = gdal.VSIFTellL(file)
+        gdal.VSIFSeekL(file, 0, 0)
+
+        content = gdal.VSIFReadL(1, size, file).decode('utf-8')
+        gdal.VSIFCloseL(file)
+        gdal.Unlink(vsimem_path)
+
+        return json.loads(content)

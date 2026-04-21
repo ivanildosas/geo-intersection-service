@@ -14,44 +14,59 @@
 <body>
 
     <header class="main-header">
-        <h1>Geo Intersection Service</h1>
+        <h1>Geo Intersect Service</h1>
         
+        <span id="status-badge"></span>
+
         <!--  -->
         <div class="toolbar">
             <button class="btn-home" 
-                hx-get="/api/map_intersect" 
-                hx-swap="none">
+                    hx-get="/api/map_intersect" 
+                    hx-target="#table-results-container" 
+                    hx-indicator="#status-badge">
                 Intersect Shapes
             </button>
-            <!-- <button id="btn-processar" 
-                class="btn-primary"
-                hx-get="/api/output_geojson" 
-                hx-target="#container-tabela-resultado" 
-                hx-indicator="#status-badge">
-                    Intersect Shapes
-            </button> -->
             <a href="/" class="btn-home">Home</a>
-            <span id="status-badge" class="htmx-indicator badge">⏳ Processando...</span>
         </div>
     </header>
 
-    <main class="dashboard-grid">
-        <section class="map-container">
-            <div class="card-header">
-                <h2>Camadas de Entrada</h2>
+    <main class="container-fluid">
+        <div class="dashboard-grid">
+            <div class="grid-column">
+                <section class="map-card">
+                    <div class="card-header"><h2>Camadas de Entrada</h2></div>
+                    <div id="map-input" class="map-view"></div>
+                </section>
             </div>
-            <div id="map-input" class="map-container"></div>
-            <div id="table-input-container"></div>
-        </section>
 
-        <section id="output-section" class="map-container empty">
-            <div class="card-header">
-                <h2>Resultado da Interseção</h2>
+            <div class="grid-column">
+                <section id="output-section" class="map-card">
+                    <div class="card-header"><h2>Resultado da Interseção</h2></div>
+                    <div id="map-output" class="map-view"></div>
+                </section>
             </div>
-            <div id="map-output" class="map-container"></div>
-        </section>
+        </div>
 
-        <div id="table-results-container">
+        <div class="tables-grid">
+            <div class="grid-column">
+                <section class="table-card">
+                    <div class="card-header">
+                        <h3>Atributos de Entrada</h3>
+                    </div>
+                    <div id="table-input-container" class="data-table-wrapper">
+                        </div>
+                </section>
+            </div>
+
+            <div class="grid-column">
+                <section class="table-card">
+                    <div class="card-header">
+                        <h3>Atributos do Resultado</h3>
+                    </div>
+                    <div id="table-results-container" class="data-table-wrapper">
+                        </div>
+                </section>
+            </div>
         </div>
     </main>
 

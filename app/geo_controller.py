@@ -28,6 +28,11 @@ class GeoController:
             return None
         Logger.info('Intersecção de geometrias finalizada.', None, '2/8')
 
+        # if result_dataset.GetLayer().GetFeatureCount() == 0:
+            # Logger.success('Rotina interrompida: as geometrias de entrada não se intersectam .', None, '2/8')
+            # empty_geojson = self.geo_service.datasource_to_geojson(result_dataset)
+            # return empty_geojson
+
         # 3. Persiste a geometria resultante da intersecção em arquivo shapefile
         file_created = self.geo_service.save_to_shapefile(result_dataset, ct.OUT_INTERSECT_SHP)
         if not file_created:
@@ -42,6 +47,8 @@ class GeoController:
             return None
         Logger.info('Atributo média de bandas gerado.', None, '4/8')
 
+        # GeoService.get_layer_property(result_dataset.GetLayer())
+
         # 5. Persiste a geometria com novo atributo em shapefile
         file_created = self.geo_service.save_to_shapefile(result_dataset, ct.OUT_MEDIA_SHP)
         if not file_created:
@@ -52,10 +59,13 @@ class GeoController:
         # 6. Cria CSV com os atributos da geometria resultante da interseção
         props = self.geo_service.get_layer_properties(result_dataset.GetLayer())
         file_created = CsvService.save_attributes_to_csv(props, ct.OUT_MEDIA_CSV)
-        if not file_created:
+        if file_created is None:
             Logger.error('Rotina interrompida: erro ao gerar CSV', ct.OUT_MEDIA_CSV, '6/8')
             return None
-        Logger.info('CSV gerado:', ct.OUT_MEDIA_CSV, '6/8')
+        elif file_created is False:
+            Logger.info('Tabela de atributos vazia, CSV não gerado.', None, '6/8')
+        else:
+            Logger.info('CSV gerado:', ct.OUT_MEDIA_CSV, '6/8')
 
         # 7. Cria GeoJSON
         file_created = self.geo_service.save_to_geojson(result_dataset, ct.OUT_MEDIA_JSON)
@@ -67,9 +77,11 @@ class GeoController:
         # 8. Ler o arquivo GeoJSON criado
         json_data = JsonService.get_json_data(ct.OUT_MEDIA_JSON)
         if not json_data:
+
             Logger.error('Rotina interrompida: erro ao ler GeoJSON', ct.OUT_MEDIA_JSON, '8/8')
             return None
         Logger.info('GeoJSON lido:', ct.OUT_MEDIA_JSON, '8/8')
+
         Logger.success("Rotina finalizada. Artefatos disponíveis.")
 
         return json_data

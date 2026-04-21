@@ -12,12 +12,12 @@ body {
 }
 
 .main-header {
-    width: 98%;
-    margin: 10px auto; /* Centraliza e afasta do topo */
-    padding: 8px 2rem; /* Compacto verticalmente, respiro nas laterais */
-    background: white;
+    /* width: 98%; */
+    margin: 5px auto; 
+    padding: 2px 0.8rem; 
+    /* background: white; */
     border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    /* box-shadow: 0 4px 12px rgba(0,0,0,0.08); */
     box-sizing: border-box;
     
     display: flex;
@@ -29,8 +29,8 @@ body {
 
 .main-header h1 {
     font-family: 'Montserrat', 'Segoe UI', sans-serif;
-    color: #3498db; /* Cor azul principal */
-    font-size: 1.5rem; /* Tamanho reduzido para elegância */
+    color: #3498db; 
+    font-size: 1.5rem; 
     margin: 0;
     line-height: 1.2;
     font-weight: 700;
@@ -44,20 +44,67 @@ body {
     align-items: center;
 }
 
-.dashboard-grid {
+header.main-header {
+    display: flex;
+    justify-content: space-between; 
+    align-items: center;
+    padding: 10px 20px;
+    background: #fff;
+    border-bottom: 1px solid var(--border-color);
+    gap: 20px; 
+}
+
+.header-title-group {
+    display: flex;
+    align-items: center;
+    gap: 15px; 
+}
+
+#status-badge {
+   padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    min-width: 150px; 
+    max-width: fit-content; 
+    text-align: center;
+    transition: all 0.3s ease;
+    background-color: #f8f9fa;
+    color: var(--primary-color);
+    border: 1px solid var(--border-color);
+    margin: 0 auto;
+}
+
+#status-badge.success {
+    background-color: #d4edda;
+    color: var(--success-color); /* #27ae60 conforme seu :root */
+    border-color: #c3e6cb;
+}
+
+#status-badge.error {
+    background-color: #f8d7da;
+    color: #c0392b; /* Vermelho para erro */
+    border-color: #f5c6cb;
+}
+
+#status-badge.processing {
+    background-color: #fff3cd;
+    color: #856404;
+    border-color: #ffeeba;
+}
+
+/* .dashboard-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr; /* Divide em 2 colunas */
+    grid-template-columns: 1fr 1fr; 
     gap: 20px;
     height: 50vh;
     min-height: 300px; 
     margin-bottom: 20px;
-
     width: 98%;
     margin-left: auto;
     margin-right: auto;
-
-    margin-top: 10px; /* Garante que os mapas não toquem na barra de título */
-}
+    margin-top: 10px; 
+} */
 
 .maps-grid {
     display: grid;
@@ -69,9 +116,9 @@ body {
 
 .maps-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr; /* Divide em 2 colunas */
+    grid-template-columns: 1fr 1fr; 
     gap: 20px;
-    height: 500px;        /* <--- AQUI: Defina uma altura fixa ou 60vh */
+    height: 500px;  
     margin-bottom: 20px;
     width: 100%;
 }
@@ -83,35 +130,38 @@ body {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    height: 100%; /* Ocupa a altura total da dashboard-grid */
+    height: 100%;
 }
 
 #map-input, #map-output {
-    flex-grow: 1;      /* Faz o mapa ocupar o espaço restante do card */
+    flex-grow: 1;
     width: 100%;
-    min-height: 350px; /* Garante um tamanho mínimo visual */
+    min-height: 350px;
     background: #e5e5e5;
 }
 
-.map-view {
+/* .map-view {
     flex-grow: 1;
     min-height: 400px;
     background: #e0e0e0;
-}
+} */
 
 .card-header {
-    padding: 4px 10px;
-    border-bottom: 1px solid #eee;
-    background: #fafafa;
+    background: #f8f9fa; 
+    padding: 4px 4px;
+    border-bottom: 1px solid #dcdde1;
+    display: flex;
+    align-items: center;
 }
 
-.card-header h2 {
-    font-size: 0.8rem;
-    text-transform: uppercase;
+.card-header h2, 
+.card-header h3 {
     margin: 0;
-    letter-spacing: 1px;
+    font-size: 0.8rem; 
+    color: var(--blue-main);
+    font-weight: 600;
+    text-transform: none; 
 }
-
 
 
 /* Botões */
@@ -130,8 +180,8 @@ body {
 .btn-primary:hover { background: #2980b9; transform: translateY(-1px); }
 
 .btn-home {
-    background-color: var(--accent-color, #3498db); /* Azul do projeto */
-    color: white !important; /* Texto branco */
+    background-color: var(--accent-color, #3498db);
+    color: white !important; 
     padding: 8px 16px;
     border-radius: 6px;
     text-decoration: none;
@@ -141,13 +191,119 @@ body {
 }
 
 .btn-home:hover {
-    background-color: #2980b9; /* Um tom mais escuro ao passar o mouse */
+    background-color: #2980b9; 
 }
 
 .container-fluid {
-    width: 98%; /* Mesma largura dos mapas */
-    margin: 0 auto; /* Centraliza na tela */
-    padding-top: 20px;
+    /* width: 98%;  */
+    margin: 0 auto;
+    /* padding-top: 20px; */
+}
+
+.table-container {
+    width: 100%;
+    overflow-x: auto;
+    margin-top: 5px;
+    background: white;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.numeric {
+    text-align: right !important;
+    font-family: 'Roboto Mono', monospace;
+}
+
+
+.dashboard-grid, .tables-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: 99%;
+    margin: 5px auto;
+}
+
+
+.map-card {
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #dcdde1;
+    height: 55vh;
+    min-height: 250px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.map-view {
+    flex-grow: 1;
+    width: 100%;
+}
+
+
+.table-card {
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #dcdde1;
+    height: 15vh;
+    min-height: 100px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+.data-table-wrapper {
+    flex-grow: 1;
+    overflow: auto;
+    padding: 0;
+}
+
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+}
+
+.data-table th {
+    text-align: center !important; 
+    background-color: #f8f9fa;
+    text-align: center !important;
+}
+
+.data-table th, 
+.data-table td {
+    vertical-align: middle !important;
+    padding: 2px 12px;
+    text-align: left; 
+    border-bottom: 1px solid #eee;
+}
+
+.data-table th.numeric,
+.data-table td.numeric {
+    text-align: right !important;
+    font-family: 'Roboto Mono', monospace; 
+}
+
+.data-table th:nth-child(n+2), 
+.data-table td:nth-child(n+2) {
+    text-align: right !important;
+}
+
+.data-table th:first-child, 
+.data-table td:first-child {
+    text-align: left !important;
+    padding-left: 25px; 
+}
+
+.data-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9; 
+}
+
+.data-table tbody tr:hover {
+    background-color: #f1f4f7;
+    transition: background-color 0.2s ease;
 }
 
 .htmx-indicator { display: none; }

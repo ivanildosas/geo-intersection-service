@@ -4,6 +4,8 @@ from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.responses import FileResponse, JSONResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
+
 
 from contextlib import asynccontextmanager
 from os import path
@@ -88,12 +90,23 @@ def configure_routes(app: FastAPI):
             if not geojson_data:
                 raise HTTPException(status_code=500, detail='Erro ao processar geometrias.')
 
-            response = HTMLResponse(content='')
+            features = geojson_data.get('features', [])
+            response = templates.TemplateResponse(
+                'table_results.html',
+                {
+                    'request': request, 
+                    'features': features
+                }
+            )
             response.headers['HX-Trigger'] = 'atualizarMapa'
             return response
 
         except Exception as e:
-            return HTMLResponse(content=f"<div class='error'>Erro: {str(e)}</div>", status_code=500)
+            print(f"Erro na interseção: {e}")
+            return HTMLResponse(
+                content=f"<div class='error'>Erro ao processar: {str(e)}</div>",
+                status_code=500
+            )
 
     @app.get('/api/read_output_geojson')
     async def get_output_geojson():
@@ -107,6 +120,7 @@ def create_app() -> FastAPI:
         version='1.0.0',
         lifespan=lifespan
     )
+    app.add_middleware(ProxyHeadersMiddleware, trusted_hosts="*")
 
     configure_static(app)
     configure_routes(app)
@@ -115,15 +129,3 @@ def create_app() -> FastAPI:
 
 
 app = create_app()
-
-
-
-'''
-response = templates.TemplateResponse(
-    "partials/table_results.html",
-    {
-        "request": request,
-        "dados": response
-    }
-)
-'''

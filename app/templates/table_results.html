@@ -1,0 +1,40 @@
+<div class="table-container">
+    <table class="data-table">
+        <thead>
+            <tr>
+                {% if features|length > 0 %}
+                    {% for key in features[0].properties.keys() %}
+                        <th>{{ key }}</th>
+                    {% endfor %}
+                {% endif %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for feature in features %}
+            <tr>
+                {% for key, value in feature.properties.items() %}
+                <td class="{{ 'numeric' if value is number else '' }}">
+                    {% if value is number %}
+                        {% if key == 'Área (m²)' or key == 'Área (ha)' %}
+                            {{ "{:,.3f}".format(value).replace(",", "X").replace(".", ",").replace("X", ".") }}
+                        {% elif key.startswith('banda') or key == 'media' or 'banda' in key %}
+                            {{ "{:,.2f}".format(value).replace(",", "X").replace(".", ",").replace("X", ".") }}
+                        {% elif value == value|int %}
+                            {{ value|int }}
+                        {% else %}
+                            {{ "{:,.2f}".format(value).replace(",", "X").replace(".", ",").replace("X", ".") }}
+                        {% endif %}
+                    {% else %}
+                        {{ value }}
+                    {% endif %}
+                </td>
+                {% endfor %}
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="100%" style="text-align: center;">Nenhum dado processado.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
