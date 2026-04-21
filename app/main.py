@@ -6,22 +6,30 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
-
-from contextlib import asynccontextmanager
 from os import path
 import platform
+from collections import deque
+from contextlib import asynccontextmanager
 from app.geo_controller import GeoController
 import app.constants as ct
-import json
+from app.logger import Logger
+
 
 # Configura diretório de templates
 templates = Jinja2Templates(directory=path.join(ct.APP_PATH, 'templates'))
 
 
+def add_log(message: str):
+    app.state.execution_logs.append(message)
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # print("Iniciando api-geo...")
-    app.state.controller = GeoController()
+
+    app.state.execution_logs = deque(maxlen=100)
+    app_logger = Logger(log_queue=app.state.execution_logs)
+    app.state.controller = GeoController(app_logger=app_logger)
+
     yield
     # print("Desligando api-geo...")
 
@@ -112,6 +120,10 @@ def configure_routes(app: FastAPI):
     async def get_output_geojson():
         geojson_data = app.state.controller.get_json_data(ct.OUT_MEDIA_JSON)
         return JSONResponse(content=geojson_data)
+
+    @app.get("/api/logs")
+    async def get_logs():
+        return {"logs": list(app.state.execution_logs)}
 
 
 def create_app() -> FastAPI:

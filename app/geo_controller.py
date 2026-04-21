@@ -2,102 +2,101 @@ from app.geo_service import GeoService
 from app.csv_service import CsvService
 from app.json_service import JsonService
 import app.constants as ct
-from app.logger import Logger
 
 
 class GeoController:
-    def __init__(self):
+    def __init__(self, app_logger):
+        self.app_logger = app_logger
         self.geo_service = GeoService()
 
     # Pipeline de execução de processamento dos arquivos shapefiles
     def intersect_pipeline(self):
 
-        Logger.start('Rotina de processamento espacial iniciada.')
+        self.app_logger.start('Rotina de processamento espacial iniciada.')
 
         # 1. Valida os arquivos shapefiles
         for shape_path in ct.SHAPEFILE_PATH_LIST:
             if not self.geo_service.check_shapefile(shape_path):
-                Logger.error('Rotina interrompida: shapefile inválido', shape_path, '1/8')
+                self.app_logger.error('Rotina interrompida: shapefile inválido', shape_path, '1/8')
                 return None
-        Logger.info('Validação de shapefiles concluída.', None, '1/8')
+        self.app_logger.info('Validação de shapefiles concluída.', None, '1/8')
 
         # 2. Intersecciona os shapefiles e cria os atributos banda(N)
         result_dataset = self.geo_service.intersect_shapes(ct.SHAPEFILE_PATH_LIST)
         if result_dataset is None:
-            Logger.error('Rotina interrompida: erro ao interseccionar geometrias.', None, '2/8')
+            self.app_logger.error('Rotina interrompida: erro ao interseccionar geometrias.', None, '2/8')
             return None
-        Logger.info('Intersecção de geometrias finalizada.', None, '2/8')
+        self.app_logger.info('Intersecção de geometrias finalizada.', None, '2/8')
 
         # if result_dataset.GetLayer().GetFeatureCount() == 0:
-            # Logger.success('Rotina interrompida: as geometrias de entrada não se intersectam .', None, '2/8')
-            # empty_geojson = self.geo_service.datasource_to_geojson(result_dataset)
-            # return empty_geojson
+        # self.app_logger.success('Rotina interrompida: as geometrias de entrada não se intersectam .', None, '2/8')
+        # empty_geojson = self.geo_service.datasource_to_geojson(result_dataset)
+        # return empty_geojson
 
         # 3. Persiste a geometria resultante da intersecção em arquivo shapefile
         file_created = self.geo_service.save_to_shapefile(result_dataset, ct.OUT_INTERSECT_SHP)
         if not file_created:
-            Logger.error('Rotina interrompida: erro ao gerar shapefile', ct.OUT_INTERSECT_SHP, '3/8')
+            self.app_logger.error('Rotina interrompida: erro ao gerar shapefile', ct.OUT_INTERSECT_SHP, '3/8')
             return None
-        Logger.info('Shapefile gerado:', ct.OUT_INTERSECT_SHP, '3/8')
+        self.app_logger.info('Shapefile gerado:', ct.OUT_INTERSECT_SHP, '3/8')
 
         # 4 Cria atributo média de bandas
         result_dataset = self.geo_service.create_field_media(result_dataset)
         if result_dataset is None:
-            Logger.error('Rotina interrompida: erro ao gerar atributo média de bandas.', None, '4/8')
+            self.app_logger.error('Rotina interrompida: erro ao gerar atributo média de bandas.', None, '4/8')
             return None
-        Logger.info('Atributo média de bandas gerado.', None, '4/8')
+        self.app_logger.info('Atributo média de bandas gerado.', None, '4/8')
 
         # GeoService.get_layer_property(result_dataset.GetLayer())
 
         # 5. Persiste a geometria com novo atributo em shapefile
         file_created = self.geo_service.save_to_shapefile(result_dataset, ct.OUT_MEDIA_SHP)
         if not file_created:
-            Logger.error('Rotina interrompida: erro ao gerar shapefile', ct.OUT_MEDIA_SHP, '5/8')
+            self.app_logger.error('Rotina interrompida: erro ao gerar shapefile', ct.OUT_MEDIA_SHP, '5/8')
             return None
-        Logger.info('Shapefile gerado:', ct.OUT_MEDIA_SHP, '5/8')
+        self.app_logger.info('Shapefile gerado:', ct.OUT_MEDIA_SHP, '5/8')
 
         # 6. Cria CSV com os atributos da geometria resultante da interseção
         props = self.geo_service.get_layer_properties(result_dataset.GetLayer())
         file_created = CsvService.save_attributes_to_csv(props, ct.OUT_MEDIA_CSV)
         if file_created is None:
-            Logger.error('Rotina interrompida: erro ao gerar CSV', ct.OUT_MEDIA_CSV, '6/8')
+            self.app_logger.error('Rotina interrompida: erro ao gerar CSV', ct.OUT_MEDIA_CSV, '6/8')
             return None
         elif file_created is False:
-            Logger.info('Tabela de atributos vazia, CSV não gerado.', None, '6/8')
+            self.app_logger.info('Tabela de atributos vazia, CSV não gerado.', None, '6/8')
         else:
-            Logger.info('CSV gerado:', ct.OUT_MEDIA_CSV, '6/8')
+            self.app_logger.info('CSV gerado:', ct.OUT_MEDIA_CSV, '6/8')
 
         # 7. Cria GeoJSON
         file_created = self.geo_service.save_to_geojson(result_dataset, ct.OUT_MEDIA_JSON)
         if not file_created:
-            Logger.error('Rotina interrompida: erro ao gerar GeoJSON', ct.OUT_MEDIA_JSON, '7/8')
+            self.app_logger.error('Rotina interrompida: erro ao gerar GeoJSON', ct.OUT_MEDIA_JSON, '7/8')
             return None
-        Logger.info('GeoJSON gerado:', ct.OUT_MEDIA_JSON, '7/8')
+        self.app_logger.info('GeoJSON gerado:', ct.OUT_MEDIA_JSON, '7/8')
 
         # 8. Ler o arquivo GeoJSON criado
         json_data = JsonService.get_json_data(ct.OUT_MEDIA_JSON)
         if not json_data:
 
-            Logger.error('Rotina interrompida: erro ao ler GeoJSON', ct.OUT_MEDIA_JSON, '8/8')
+            self.app_logger.error('Rotina interrompida: erro ao ler GeoJSON', ct.OUT_MEDIA_JSON, '8/8')
             return None
-        Logger.info('GeoJSON lido:', ct.OUT_MEDIA_JSON, '8/8')
+        self.app_logger.info('GeoJSON lido:', ct.OUT_MEDIA_JSON, '8/8')
 
-        Logger.success("Rotina finalizada. Artefatos disponíveis.")
+        self.app_logger.success("Rotina finalizada. Artefatos disponíveis.")
 
         return json_data
 
-    @staticmethod
-    def get_json_data(file_path):
+    def get_json_data(self, file_path):
         geojson_data = JsonService.get_json_data(file_path)
         if not geojson_data:
-            Logger.error('Erro na leitura do GeoJSON', file_path)
+            self.app_logger.error('Erro na leitura do GeoJSON', file_path)
             return None
-        Logger.success('GeoJSON lido', file_path)
+        self.app_logger.success('GeoJSON lido', file_path)
         return geojson_data
 
     # Retorna dicionario com as camadas de entrada(shapefiles) em formato GeoJSON Data
     def shapes_to_geojson_dict(self):
-        Logger.start('Rotina de conversão de shapefiles para GeoJsonData iniciada.')
+        self.app_logger.start('Rotina de conversão de shapefiles para GeoJsonData iniciada.')
 
         count_shapes = len(ct.SHAPEFILE_PATH_LIST)
         geojson_dict = {}
@@ -106,12 +105,11 @@ class GeoController:
             nome_camada = f'camada-{i+1}'
             geojson_data = GeoService.shapefile_to_geojson(shape_path)
             if not geojson_data:
-                Logger.error('Rotina interrompida: erro na conversão do shapefile', shape_path, f'{i+1}/{count_shapes}')
+                self.app_logger.error('Rotina interrompida: erro na conversão do shapefile', shape_path, f'{i+1}/{count_shapes}')
                 return None
 
             geojson_dict[nome_camada] = geojson_data
-            Logger.info('GeoJsonData gerado do shapefile', shape_path, f'{i+1}/{count_shapes}')
+            self.app_logger.info('GeoJsonData gerado do shapefile', shape_path, f'{i+1}/{count_shapes}')
 
-        Logger.success('Rotina finalizada.')
+        self.app_logger.success('Rotina finalizada.')
         return geojson_dict
-    

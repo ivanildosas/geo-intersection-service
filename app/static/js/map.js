@@ -2,10 +2,12 @@
 let mapInput, mapOutput;
 let layerInputGroup, layerOutputGroup;
 let layerOutput = null;
+let logInterval;
 
 // Inicializa mapas
 function init() {
     console.log("Iniciando...");
+    iniciarMonitoramento();
     
     const centroBrasil = [-15.78, -47.93];
     const zoomInicial = 4;
@@ -37,6 +39,7 @@ function init() {
 async function carregarCamadasBase() {
     const badge = document.getElementById('status-badge');
     try {
+
         const res = await fetch('/api/inputs_geojson');
         if (!res.ok) throw new Error("Falha na API");
         
@@ -69,6 +72,9 @@ async function carregarCamadasBase() {
     } catch (err) {
         console.error("Erro ao carregar bases:", err);
         atualizarStatusBadge("❌ Erro: " + err.message, "error");
+    } finally {
+        pararMonitoramento(); 
+        monitorarLogs();
     }
 }
 
@@ -111,6 +117,9 @@ document.body.addEventListener('atualizarMapa', async () => {
     } catch (err) {
         console.error("Erro ao renderizar mapa 2:", err);
         atualizarStatusBadge("❌ Erro: " + err.message, "error");
+    } finally {
+        pararMonitoramento(); 
+        monitorarLogs();
     }
 });
 
@@ -196,6 +205,9 @@ async function carregarTabelaResultado() {
     } catch (err) {
         console.error("Erro ao carregar tabela de atributos:", err);
         atualizarStatusBadge("❌ Erro: " + err.message, "error");
+    } finally {
+        pararMonitoramento(); 
+        monitorarLogs();
     }
 }
 
@@ -215,6 +227,35 @@ function atualizarStatusBadge(mensagem, tipo) {
     }
 }
 
+function iniciarMonitoramento() {
+    if (logInterval) clearInterval(logInterval);
+    logInterval = setInterval(monitorarLogs, 1000);
+}
+
+function pararMonitoramento() {
+    clearInterval(logInterval);
+}
+
+async function monitorarLogs() {
+    try {
+        const res = await fetch('/api/logs');
+        const data = await res.json();
+        const consoleLog = document.getElementById('log-console');
+
+        if (data.logs) {
+            const formattedLogs = data.logs.map(log => {
+                let logClass = 'log-info';
+                if (log.includes('[SUCESSO]')) logClass = 'log-success';
+                else if (log.includes('[ERRO]')) logClass = 'log-error';
+                return `<div class="${logClass}">• ${log}</div>`;
+            });
+            consoleLog.innerHTML = formattedLogs.join('');
+            consoleLog.scrollTop = consoleLog.scrollHeight;
+        }
+    } catch (err) {
+        console.error("Erro ao ler logs:", err);
+    }
+}
 
 document.body.addEventListener('htmx:beforeRequest', function(evt) {
     if (evt.detail.elt.getAttribute('hx-get') === '/api/map_intersect') {
