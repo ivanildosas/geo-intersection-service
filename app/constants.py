@@ -20,14 +20,14 @@ GEOJSON_FOLDER = str(BASE_DIR / 'files' / 'geojson')
 CSV_FOLDER = str(BASE_DIR / 'files' / 'csv')
 
 # Shapefiles
-# SHAPEFILE_NAME_LIST = ['camada-1.shp', 'camada-2.shp', 'camada-3.shp']
-# SHAPEFILE_NAME_LIST = ['camada-4.shp', 'camada-5.shp', 'camada-6.shp']
-SHAPEFILE_NAME_LIST = [
+SHAPEFILE_NAME_LIST = ['camada-1.shp', 'camada-2.shp', 'camada-3.shp']
+SHAPEFILE_NAME_LIST_ALL = [
     'camada-1.shp', 'camada-2.shp', 'camada-3.shp',
     'camada-4.shp', 'camada-5.shp', 'camada-6.shp',
     'camada-7.shp', 'camada-8.shp', 'camada-9.shp'
 ]
 SHAPEFILE_PATH_LIST = [str(Path(SHAPES_FOLDER) / x) for x in SHAPEFILE_NAME_LIST]
+SHAPEFILE_PATH_LIST_ALL = [str(Path(SHAPES_FOLDER) / x) for x in SHAPEFILE_NAME_LIST_ALL]
 # SHAPEFILE_COUNT = len(SHAPEFILE_NAME_LIST)
 
 # Arquivo GeoJSON

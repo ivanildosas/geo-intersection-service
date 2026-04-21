@@ -13,14 +13,11 @@ class GeoController:
 
     # Pipeline de execução de processamento dos arquivos shapefiles
     def intersect_pipeline(self, layers=None):
-        print(f'layers: {layers}')
 
         shapes_path_list = ct.SHAPEFILE_PATH_LIST
         if layers is not None:
             shapes_path_list = [str(Path(ct.SHAPES_FOLDER) / x) for x in layers]
-            
-        print(f'shapes_path_list: {shapes_path_list}')
-        
+
         shapes_count = len(shapes_path_list)
         self.app_logger.start('Rotina de processamento espacial iniciada.')
 
@@ -51,7 +48,6 @@ class GeoController:
         self.app_logger.info('Shapefile gerado:', ct.OUT_INTERSECT_SHP, '3/8')
 
         # 4 Cria atributo média de bandas
-        print(self.geo_service.get_layer_properties(result_dataset.GetLayer()))
         result_dataset = self.geo_service.create_field_media(result_dataset, shapes_count)
         if result_dataset is None:
             self.app_logger.error('Rotina interrompida: erro ao gerar atributo média de bandas.', None, '4/8')
@@ -110,9 +106,9 @@ class GeoController:
         self.app_logger.start('Rotina de conversão de shapefiles para GeoJsonData iniciada.')
 
         geojson_dict = {}
-        shapes_count = len(ct.SHAPEFILE_PATH_LIST)
+        shapes_count = len(ct.SHAPEFILE_PATH_LIST_ALL)
 
-        for i, shape_path in enumerate(ct.SHAPEFILE_PATH_LIST):
+        for i, shape_path in enumerate(ct.SHAPEFILE_PATH_LIST_ALL):
 
             #  nome_camada = f'camada-{i+1}'
             nome_camada = path.basename(shape_path)
