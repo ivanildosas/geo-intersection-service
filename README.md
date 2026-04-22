@@ -4,7 +4,7 @@ Serviço de processamento espacial com GDAL/OGR que realiza o cálculo de inters
 
 Processa e armazena resultados em SHAPEFILE, CSV e GeoJSON, entregando os dados via endpoint FastAPI.
 
-**Obs.1:** O processamento e o cálculo de área utilizam o modelo de referência Elipsoide GRS80 (SIRGAS 2000 / EPSG:4674), utilizando as Fórmulas de Karney para garantir paridade total com o QGIS 4.0.1. Parâmetros podem ser alterados em `/app/constants.py`.
+**Obs.1:** O processamento e o cálculo de área utilizam o modelo de referência Elipsoide GRS80 (SIRGAS 2000 / EPSG:4674), utilizando as Fórmulas de Karney para garantir paridade com o QGIS 4.0.1. Parâmetros podem ser alterados em `/app/constants.py`.
 
 **Obs.2:** Os arquivos shapefiles devem estar na pasta `/files/shapefiles` e seus nomes inseridos no `/app/constants.py`.
 

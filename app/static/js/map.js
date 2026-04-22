@@ -321,7 +321,7 @@ async function carregarTabelaResultado() {
             document.getElementById('table-results-container').innerHTML = "";
         } else {
             atualizarStatusBadge("✅ Interseção realizada com sucesso!", "success");
-            renderAttributeTable('table-results-container', data);
+            renderAttributeTable(data.features, 'table-results-container', false);
         }
     } catch (err) {
         console.error("Erro ao carregar tabela de atributos:", err);
@@ -349,8 +349,9 @@ function atualizarStatusBadge(mensagem, tipo) {
 }
 
 function iniciarMonitoramento() {
-    if (logInterval) clearInterval(logInterval);
-    logInterval = setInterval(monitorarLogs, 1000);
+    if (!logInterval) {
+        logInterval = setInterval(monitorarLogs, 1000);
+    }
 }
 
 function pararMonitoramento() {
@@ -368,17 +369,23 @@ async function monitorarLogs() {
 
         const data = await res.json();
         const consoleLog = document.getElementById('log-console');
+        if (!consoleLog || !data.logs) return;
 
-        if (data.logs) {
-            const formattedLogs = data.logs.map(log => {
-                let logClass = 'log-info';
-                if (log.includes('[SUCESSO]')) logClass = 'log-success';
-                else if (log.includes('[ERRO]')) logClass = 'log-error';
-                return `<div class="${logClass}">• ${log}</div>`;
+        const novosLogs = data.logs.map(log => {
+            let logClass = 'log-info';
+            if (log.includes('[SUCESSO]')) logClass = 'log-success';
+            else if (log.includes('[ERRO]')) logClass = 'log-error';
+            return `<div class="${logClass}">• ${log}</div>`;
+        }).join('');
+
+        if (consoleLog.innerHTML !== novosLogs) {
+            consoleLog.innerHTML = novosLogs;
+            consoleLog.scrollTo({
+                top: consoleLog.scrollHeight,
+                behavior: 'smooth'
             });
-            consoleLog.innerHTML = formattedLogs.join('');
-            consoleLog.scrollTop = consoleLog.scrollHeight;
         }
+        
     } catch (err) {
         console.error("Erro ao ler logs:", err);
         atualizarStatusBadge("❌ Erro ao ler logs!", "error");

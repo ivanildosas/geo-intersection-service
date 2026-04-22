@@ -35,11 +35,6 @@ class GeoController:
             return None
         self.app_logger.info('Intersecção de geometrias finalizada.', None, '2/8')
 
-        # if result_dataset.GetLayer().GetFeatureCount() == 0:
-        # self.app_logger.success('Rotina interrompida: as geometrias de entrada não se intersectam .', None, '2/8')
-        # empty_geojson = self.geo_service.datasource_to_geojson(result_dataset)
-        # return empty_geojson
-
         # 3. Persiste a geometria resultante da intersecção em arquivo shapefile
         file_created = self.geo_service.save_to_shapefile(result_dataset, ct.OUT_INTERSECT_SHP)
         if not file_created:
@@ -53,8 +48,6 @@ class GeoController:
             self.app_logger.error('Rotina interrompida: erro ao gerar atributo média de bandas.', None, '4/8')
             return None
         self.app_logger.info('Atributo média de bandas gerado.', None, '4/8')
-
-        # GeoService.get_layer_property(result_dataset.GetLayer())
 
         # 5. Persiste a geometria com novo atributo em shapefile
         file_created = self.geo_service.save_to_shapefile(result_dataset, ct.OUT_MEDIA_SHP)
@@ -87,7 +80,7 @@ class GeoController:
 
             self.app_logger.error('Rotina interrompida: erro ao ler GeoJSON', ct.OUT_MEDIA_JSON, '8/8')
             return None
-        # self.app_logger.info('GeoJSON lido:', ct.OUT_MEDIA_JSON, '8/8')
+        self.app_logger.info('GeoJSON lido:', ct.OUT_MEDIA_JSON, '8/8')
 
         self.app_logger.success("Rotina finalizada. Artefatos disponíveis.")
 

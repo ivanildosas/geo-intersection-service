@@ -12,7 +12,7 @@ DATUM = 4674
 WGS84 = 'WGS84'  # Padrão WebGIS (Leaflet)
 GRS80 = 'GRS80'  # Base do SIRGAS 2000
 SPHERE = 'sphere'  # OpenStreetMap, ArcGIS Online, Google Maps
-ELIPSOID = WGS84
+ELIPSOID = GRS80
 
 # Diretórios de arquivos
 SHAPES_FOLDER = str(BASE_DIR / 'files' / 'shapefiles')

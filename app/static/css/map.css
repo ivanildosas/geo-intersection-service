@@ -470,6 +470,11 @@ td.col-highlight.sticky-col {
 .log-error { color: #e74c3c; font-weight: 600; }
 .log-timestamp { color: #95a5a6; margin-right: 8px; }
 
+#log-console {
+    scroll-behavior: smooth;
+    overflow-y: auto;
+}
+
 .htmx-indicator { display: none; }
 .htmx-request .htmx-indicator { display: inline-block; }
 .badge { background: #f1c40f; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; }
