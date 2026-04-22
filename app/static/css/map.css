@@ -411,7 +411,7 @@ td.col-highlight.sticky-col {
     border: none;
     cursor: pointer;
     transition: transform 0.2s;
-    max-width: 40px;
+    max-width: 30px;
 }
 
 .btn-vis:hover {
@@ -419,7 +419,7 @@ td.col-highlight.sticky-col {
 }
 
 .data-table tbody tr:hover td {
-    background-color: #ebf3ff !important; /* Cor de destaque ao passar o mouse */
+    background-color: #ebf3ff !important; 
     cursor: pointer;
 }
 
@@ -447,20 +447,18 @@ td.col-highlight.sticky-col {
     font-weight: 700;
 }
 
-/* Alinhamento dos valores na segunda tabela */
+
 #result-table tbody td {
     padding: 8px 12px;
     vertical-align: middle;
 }
 
-/* Números e áreas: sempre à direita para facilitar comparação decimal */
 .col-number {
     text-align: right !important;
     font-family: 'Courier New', monospace; /* Opcional: fonte mono ajuda na leitura de números */
     font-weight: 500;
 }
 
-/* Colunas de texto ou ícones na segunda tabela: centralizados */
 .col-center {
     text-align: center !important;
     vertical-align: middle;

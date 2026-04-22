@@ -50,6 +50,17 @@ def create_status_template(request: Request):
 
 def configure_routes(app: FastAPI):
 
+    @app.get('/favicon.ico', include_in_schema=False)
+    async def favicon():
+        return Response(status_code=204)
+
+    @app.get('/status')
+    def get_status():
+        return {
+            "status": "online",
+            "message": "Service running!"
+        }
+
     @app.get('/', response_class=HTMLResponse)
     def read_root(request: Request):
         return create_status_template(request)
@@ -114,7 +125,7 @@ def configure_routes(app: FastAPI):
                 status_code=500
             )
 
-    @app.get('/api/read_output_geojson')
+    @app.get('/api/geojson_result')
     async def get_output_geojson():
         geojson_data = app.state.controller.get_json_data(ct.OUT_MEDIA_JSON)
         return JSONResponse(content=geojson_data)

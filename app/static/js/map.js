@@ -114,11 +114,11 @@ document.body.addEventListener('atualizarMapa', async () => {
 
         atualizarStatusBadge("⏳ Carregando geometrias...", "processing");
 
-        const response = await fetch('/api/read_output_geojson'); 
+        const response = await fetch('/api/geojson_result'); 
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.detail || `Erro no endpoint /api/read_output_geojson: ${response.status}`);
+            throw new Error(errorData.detail || `Erro no endpoint /api/geojson_result: ${response.status}`);
         }
 
         const data = await response.json();
@@ -307,11 +307,11 @@ async function carregarTabelaResultado() {
         iniciarMonitoramento();
 
         const badge = document.getElementById('status-badge');
-        const response = await fetch('/api/read_output_geojson');
+        const response = await fetch('/api/geojson_result');
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.detail || `Erro no endpoint /api/read_output_geojson: ${response.status}`);
+            throw new Error(errorData.detail || `Erro no endpoint /api/geojson_result: ${response.status}`);
         }
 
         const data = await response.json();

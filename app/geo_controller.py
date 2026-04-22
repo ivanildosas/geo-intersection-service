@@ -106,9 +106,9 @@ class GeoController:
         self.app_logger.start('Rotina de conversão de shapefiles para GeoJsonData iniciada.')
 
         geojson_dict = {}
-        shapes_count = len(ct.SHAPEFILE_PATH_LIST_ALL)
+        shapes_count = len(ct.SHAPEFILE_PATH_LIST)
 
-        for i, shape_path in enumerate(ct.SHAPEFILE_PATH_LIST_ALL):
+        for i, shape_path in enumerate(ct.SHAPEFILE_PATH_LIST):
 
             #  nome_camada = f'camada-{i+1}'
             nome_camada = path.basename(shape_path)
