@@ -14,7 +14,7 @@ let selectedLayers = new Set();
 
 // Inicializa mapas
 function init() {
-    console.log("Iniciando...");
+    // console.log("Iniciando...");
    
     const centroBrasil = [-15.78, -47.93];
     const zoomInicial = 4;
@@ -106,7 +106,7 @@ async function carregarCamadasBase() {
 
 // atualiza mapa resultado
 document.body.addEventListener('atualizarMapa', async () => {
-    console.log("Evento 'atualizarMapa' Iniciando carga do Mapa 2...");
+    // console.log("Evento 'atualizarMapa' Iniciando carga do Mapa 2...");
     const badge = document.getElementById('status-badge');
 
     try {
@@ -128,10 +128,8 @@ document.body.addEventListener('atualizarMapa', async () => {
         }
 
         if (!data || !data.features || data.features.length === 0) {
-            console.log("Resultado vazio, limpando mapa e tabela...");
+            // console.log("Resultado vazio, limpando mapa e tabela...");
             if (layerOutput) layerOutputGroup.clearLayers();
-            // atualizarStatusBadge(" Sem áreas de interseção!", "processing");
-            // document.getElementById('table-results-container').innerHTML = "Sem áreas de interseção encontradas.";
             return;
         }
 
@@ -144,8 +142,6 @@ document.body.addEventListener('atualizarMapa', async () => {
         }).addTo(layerOutputGroup);
 
         mapOutput.fitBounds(layerOutput.getBounds());
-        
-        // atualizarStatusBadge("✅ Interseção realizada com sucesso!", "success");
 
     } catch (err) {
         console.error("Erro ao carregar resultado:", err);
@@ -174,19 +170,30 @@ function renderAttributeTable(features, containerId, isInputTable = false) {
     const headerRow = document.createElement('tr');
     
     const fixedHeaders = ['Ocultar', 'Shapefile', 'Intersect'];
-    const propertiesHeaders = Object.keys(features[0].properties).filter(h => h !== 'layerName');
-    const allHeaders = [...fixedHeaders, ...propertiesHeaders];
 
+    const propertiesHeaders = Object.keys(features[0].properties).filter(h => h !== 'layerName');
+    
+    let allHeaders = propertiesHeaders;
+    if (isInputTable) {
+        allHeaders = [...fixedHeaders, ...propertiesHeaders];
+    }
+    
     allHeaders.forEach((header, index) => {
         const th = document.createElement('th');
         th.textContent = header;
         
+        if (header === 'Área (m²)' || header === 'Área (ha)') {
+            th.classList.add('col-right')
+        }
+
         if (isInputTable) {
-            if ([0, 2, 3, 5].includes(index)) {
-                th.classList.add('col-size');
-                if (index === 2) th.classList.add('col-shapefile');
-            }
+            if (header === 'Shapefile') th.classList.add('col-shapefile');
+            if (header === 'Intersect') th.classList.add('col-intersect');
             if (index < 3) th.classList.add('col-highlight'); 
+            
+            if ([3, 5].includes(index)) {
+                th.classList.add('col-short');
+            }
         }
         headerRow.appendChild(th);
     });
@@ -267,6 +274,9 @@ function toggleLayerSelection(checkbox, layerName) {
             }
         }
     });
+
+    // const bounds = L.featureGroup(layerInputGroup.getLayers()).getBounds();
+    // if (bounds.isValid()) mapInput.fitBounds(bounds);
 
     updateIntersectButton();
 }
